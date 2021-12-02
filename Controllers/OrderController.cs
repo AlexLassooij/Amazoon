@@ -61,7 +61,7 @@ namespace mongoTest.Controllers
                 };
 
 
-                UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", "purchased");
+                UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", ItemState.Purchased);
                 //UpdateDefinition<Item> update = new BsonDocument
                 //{
                 //    { "itemState", "purchased" }
