@@ -6,11 +6,10 @@ namespace mongoTest.Components
 {
     public class Truck
     {
-        private int maxWeight { get; set; }
-        private int maxVolume { get; set; }
-        public int currentWeight;
-        public int currentVolume;
-        private TruckType truckType {get; set;}
+        static private int MAX_WEIGHT = 5000;
+        static private int MAX_VOLUME = 5000;
+        private int currentWeight = 0;
+        private int currentVolume = 0;
         private DateTime timeOfArrival { get; set; }
         private Warehouse assignedWarehouse { get; set; }
         private TruckState truckState { get; set; }
@@ -24,20 +23,21 @@ namespace mongoTest.Components
         private int[] truckCurrentCapacity = new int[2]; // truckCurrentCapacity[0] = current weight the truck is carrying
                                                          // truckCurrentCapacity[1] = current volume the truck is carrying
 
-        // Truck constructor
-        public Truck(TruckType truckType, int maxWeight, int maxVolume, DateTime timeOfArrival, Warehouse assignedWarehouse)
+        // Default constructor for adding truck to warehouse
+        public Truck(TruckState truckState, Warehouse assignedWarehouse)
         {
-            this.truckType = truckType;
-            this.maxWeight = maxWeight;
-            this.maxVolume = maxVolume;
-
-            this.truckCapacity[0] = this.maxWeight;
-            this.truckCapacity[1] = this.maxVolume;
-
-            this.timeOfArrival = timeOfArrival;
+            this.truckState = truckState;            
             this.assignedWarehouse = assignedWarehouse;
-            this.truckState = TruckState.Arriving;
+            this.truckState = TruckState.Loading;
         }
+
+        // overload constructor for arriving truck
+        //public Truck(DateTime timeOfArrival, Warehouse assignedWarehouse)
+        //{
+        //    this.timeOfArrival = timeOfArrival;
+        //    this.assignedWarehouse = assignedWarehouse;
+        //    this.truckState = TruckState.Arriving;
+        //}
 
         private Dock findAvailableDock(Dock[] listofDocks)
         {
@@ -119,17 +119,7 @@ namespace mongoTest.Components
             {
                 this.truckState = TruckState.Departed;
             }
-        }
-
-        public int getMaxWeight()
-        {
-            return maxWeight;
-        }
-
-        public int getMaxVolume()
-        {
-            return maxVolume;
-        }
+        }        
 
         public TruckState getTruckState()
         {
@@ -148,12 +138,12 @@ namespace mongoTest.Components
 
         public int getAvailableWeight()
         {
-            return maxWeight - currentWeight;
+            return MAX_WEIGHT - currentWeight;
         }
 
         public int getAvailableVolume()
         {
-            return maxVolume - currentVolume;
+            return MAX_VOLUME - currentVolume;
         }
     }
 

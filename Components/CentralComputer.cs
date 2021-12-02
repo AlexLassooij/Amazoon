@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using MongoDB.Driver;
+using MongoDB.Bson;
 using mongoTest.Models;
 
 namespace mongoTest.Components
@@ -11,14 +12,14 @@ namespace mongoTest.Components
     public class CentralComputer
     {
         private Warehouse currentWarehouse;
-        private List<Item> inventory;
-        private ItemLocation[] inventoryLocations { get; }
+        private List<Item> inventory = new List<Item>();
+        private List<ItemLocation> inventoryLocations = new List<ItemLocation>();
 
         // queue should probably be moved to warehouse
-        private Queue<RobotTask> robotTaskQueue;
+        private Queue<RobotTask> robotTaskQueue = new Queue<RobotTask>();
         private Queue<Order> orderQueue;
 
-        private Semaphore robotSemaphore;
+        private Mutex robotQueueMutex = new Mutex();
         private Semaphore truckSemaphore;
         private Task[] robotTasks;
         private IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
@@ -42,9 +43,8 @@ namespace mongoTest.Components
         public CentralComputer(Warehouse currentWarehouse)
         {
             this.currentWarehouse = currentWarehouse;
-            robotSemaphore = new Semaphore(currentWarehouse.numRobots, currentWarehouse.numRobots);
             truckSemaphore = new Semaphore(0, currentWarehouse.getNumDocks());
-            robotTasks = new Task[currentWarehouse.numRobots];
+            robotTasks = new Task[currentWarehouse.numRobots];            
             runWarehouse();
         }
 
@@ -119,50 +119,76 @@ namespace mongoTest.Components
         // central function of the computer, will always run
         public void runWarehouse()
         {
-           // dummy variable for now
-           bool newOrderCameIn = false;
+            performInitialRestock();
+            currentWarehouse.addTruck(new Truck(TruckState.Loading, currentWarehouse));
+            initRobots();
 
            while (true)
            {
-                //if (newOrderCameIn)
-                //{
-                //    handleNewOrder(newOrder);
-                //}
+                pollForNewOrders();
 
                 Console.WriteLine("Central computer running");
 
-               Thread.Sleep(1000);
+                Thread.Sleep(1000);
            }
         }
 
         private void initRobots() {
             for (int i = 0; i < currentWarehouse.numRobots; i++) {
-                currentWarehouse.getRobots()[i] = new Robot(this);
-                Task t = Task.Run(() => currentWarehouse.getRobots()[i].runRobot());
-                robotTasks[i] = t;
+                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex);
+                Robot newRobot = currentWarehouse.getRobots()[i];
+                Task t = Task.Run(() => newRobot.runRobot());
+                // robotTasks[i] = t;
             }
         }
 
-        private void pollForNewOrder()
+        private void pollForNewOrders()
         {
-
+            Console.WriteLine("polling for new orders");
+            List<Order> orders = _orders.Find(Order => true).ToList();
+            
+            foreach(Order order in orders)
+            {
+                createTasksForUnhandledItems(order);
+            }
         }
 
-        private void handleNewOrder(Order order)
+        // receives a new order,
+        // if an order exists where there exists items that
+        // are present in warehouse and have not been scheduled
+        // for pickup by robot, creates new tasks to load those items
+        private void createTasksForUnhandledItems(Order order)
         {
-            List<Item> items = order.items;
-            Truck loadingTruck = isTruckAvailable(getTotalItemWeight(items), getTotalItemVolume(items));
+            // list of items in this order that are present in current warehouse
+            List<Item> itemsInWarehouse = new List<Item>();
+            FilterDefinition<Item> filter = new BsonDocument
+                {
+                    { "warehouseID", currentWarehouse.getID() },
+                    { "itemState", ItemState.Purchased }
+                };
+
+            UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", ItemState.Loading);
+
+            foreach (Item item in order.items)
+            {
+                if (item.warehouseID == currentWarehouse.getID() && item.itemState == ItemState.Purchased)
+                {
+                    _items.FindOneAndUpdate(filter, update);
+                    item.itemState = ItemState.Loading;
+                    itemsInWarehouse.Add(item);
+                }
+            }
+                Truck loadingTruck = isTruckAvailable(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
             if (loadingTruck != null)
             {
-                int numTasks = queueRobotTasks("load", items, loadingTruck);
-                // Task.Run(() => consumeRobotTasks(numTasks));
+                queueRobotTasks("load", itemsInWarehouse, loadingTruck);
             }
         }
 
         // queues robot tasks for a particular Order
         // this will happen after a new order comes in and there is a truck
         // available to ship this order
-        private int queueRobotTasks(string taskType, List<Item> items, Truck truck)
+        private void queueRobotTasks(string taskType, List<Item> items, Truck truck)
         {
             int numTasks = 0;
             List<Item> itemsList = new List<Item>();
@@ -180,7 +206,48 @@ namespace mongoTest.Components
                     numTasks += 1;
                 }
             }
-            return numTasks;
+            robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
+        }
+
+        // will only be called at start to magically add all items to warehouse
+        private void performInitialRestock()
+        {
+            List<Item> items = _items.Find(item => item.warehouseID == currentWarehouse.getID()).ToList();
+            foreach (Item item in items)
+            {
+                ItemLocation location = GenerateRandomLocation(item);
+                location.items.Add(item.Id);
+                location.currentWeight += item.weight;
+                inventoryLocations.Add(location);
+                inventory.Add(item);
+            }
+        }
+
+        private void addItemsToDatabase(List<Item> items)
+        {            
+                _items.InsertMany(items);            
+        }
+
+        private ItemLocation GenerateRandomLocation(Item item)
+        {
+            Random rand = new Random();
+            int row = rand.Next(0, currentWarehouse.getWarehouseRows() + 1);
+            int column = rand.Next(0, currentWarehouse.getWarehouseColumns() + 1);
+            int shelf = rand.Next(0, currentWarehouse.getShelfHeight() + 1);
+            string orientation = new List<string>() { "right", "left" }[rand.Next(0,2)];
+
+            ItemLocation location =  new ItemLocation(row, column, shelf, orientation);
+            if (!willItemFitOnShelf(item, location))
+            {
+                location = GenerateRandomLocation(item);
+            }
+
+            return location;
+        }
+
+        private bool willItemFitOnShelf(Item item, ItemLocation location)
+        {
+            return item.weight + location.currentWeight <= Warehouse.MAX_SHELF_WEIGHT;
         }
 
         public int getTotalItemWeight(List<Item> items)

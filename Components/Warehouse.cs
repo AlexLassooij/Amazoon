@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace mongoTest.Components
 {
@@ -10,7 +11,10 @@ namespace mongoTest.Components
         
         // WAREHOUSE STUFF
         private int numRows;
-        private int numColumns { get; set; }
+        private int numColumns; 
+        private int shelfHeight;
+        private int ID;
+        public static int MAX_SHELF_WEIGHT = 1000;
         
         // DOCKING STATION STUFF
         private int numDocks { get; set; } // set the number of docking stations that will be used to initialize the docking stations in the warehouse
@@ -21,7 +25,7 @@ namespace mongoTest.Components
         public int numRobots;
 
         // TRUCK stuff
-        private Truck[] trucks;
+        private List<Truck> trucks = new List<Truck>();
 
 
 
@@ -29,13 +33,17 @@ namespace mongoTest.Components
         private int[] defaultRobotLocation = new int[2]{0, 0};
 
         public Warehouse(
+            int ID,
             int numRows, 
             int numColumns,
+            int shelfHeight,
             int numDocks,
             int numRobots)
-        {            
+        {
+            this.ID = ID;
             this.numRows = numRows;
             this.numColumns = numColumns;
+            this.shelfHeight = shelfHeight;
             this.numDocks = numDocks;
             this.numRobots = numRobots;
             robots = new Robot[numRobots];
@@ -53,6 +61,11 @@ namespace mongoTest.Components
             return this.numColumns;
         }
 
+        public int getShelfHeight()
+        {
+            return this.shelfHeight;
+        }
+
         public int getNumDocks(){
             return numDocks;
         }
@@ -66,9 +79,19 @@ namespace mongoTest.Components
             return robots;
         }
     
-        public Truck[] getTrucks()
+        public List<Truck> getTrucks()
         {
             return trucks;
+        }
+
+        public void addTruck(Truck truck)
+        {
+            trucks.Add(truck);
+        }
+
+        public int getID()
+        {
+            return ID;
         }
     }
 }

@@ -7,28 +7,26 @@ namespace mongoTest.Components
 {
     public class Robot
     {
-        static private int MAX_WEIGHT = 200;
+        static private int MAX_WEIGHT = 1000;
         static private int MAX_CHARGE = 100;
         public static readonly int ENERGY_PER_TASK = 10; 
         
         public static readonly int ROBOT_CHARGING_TIME = 10000;
         private CentralComputer computer;
         private int batteryLevel;
-        private int maxWeight;
         private int currentWeight;
         private RobotTask currentTask;
-        private int[] location = new int[2];
+        private int[] location = new int[2] { 0, 0 };
         private List<Item> itemsInPossession;
-        private String Id;
-        
+        private String Id = Guid.NewGuid().ToString();
+        private Mutex queueMutex;
 
-        public Robot(CentralComputer computer)
+        public Robot(CentralComputer computer, Mutex queueMutex)
         {
-            this.Id = Guid.NewGuid().ToString();
             this.batteryLevel = MAX_CHARGE;
-            this.maxWeight = MAX_WEIGHT;
-            this.location = new int[2] { 0, 0 };  
-            this.computer = computer;          
+            this.queueMutex = queueMutex;
+            this.computer = computer;
+            
         }        
 
         // what does the robot need to do
@@ -36,13 +34,19 @@ namespace mongoTest.Components
         // consume tasks
         public void runRobot() {
             while(true) {
-                if (batterySufficientForTrip()) {                    
-                    currentTask = computer.GetRobotTasks().Dequeue();
-                    executeRobotTask(currentTask);                
+                if (batterySufficientForTrip()) {
+                    queueMutex.WaitOne();
+                    bool successfulDequeue = computer.GetRobotTasks().TryDequeue(out currentTask);
+                    queueMutex.ReleaseMutex();
+                    if (successfulDequeue)
+                    {
+                        Console.WriteLine("Robot executing task");
+                        executeRobotTask(currentTask);
+                    }
                 } else {
                     chargeBattery();
                 }
-                
+                Console.WriteLine("Robot running - " + Id);
                 Thread.Sleep(1000);
             }
         }   

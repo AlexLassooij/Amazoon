@@ -1,4 +1,7 @@
-﻿{"name" : "peanutbutter", "weight":  200, "volume": 5, "warehouseID": 1, "amountAvailable": 5}
+{"name" : "peanutbutter", "weight":  200, "volume": 5, "warehouseID": 1, "amountAvailable": 5}
 {"name" : "shirt", "weight":  200, "volume": 3, "warehouseID": 1, "amountAvailable": 2}
 {"name" : "pot", "weight":  300, "volume": 30, "warehouseID": 1,"amountAvailable": 3}
 {"name" : "salad", "weight":  30, "volume": 5, "warehouseID": 1,"amountAvailable": 1}
+{"name" : "phonecase", "weight":  30, "volume": 2, "warehouseID": 1,"amountAvailable": 4}
+{"name" : "bottle", "weight":  150, "volume": 10, "warehouseID": 1,"amountAvailable": 3}
+{"name" : "speaker", "weight":  80, "volume": 8, "warehouseID": 1, "amountAvailable": 2} 

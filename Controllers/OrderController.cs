@@ -70,6 +70,7 @@ namespace mongoTest.Controllers
                 for (int i = 0; i < int.Parse(splitPair[1]); i++)
                 {
                     Item item = _items.FindOneAndUpdate(filter, update);
+                    item.itemState = ItemState.Purchased;
                     orderItems.Add(item);
                 }
             }

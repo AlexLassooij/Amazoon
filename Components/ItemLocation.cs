@@ -1,18 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 namespace mongoTest.Components
 {
     public class ItemLocation
     {
-        public Warehouse currentWarehouse { get; set; }
+        
         public int row { get; set; }
         public int column { get; set; }
         public int shelf { get; set; }
-        public String orientation { get; set; }
-        //public double current weight;
+        public string orientation { get; set; }
+        public List<string> items = new List<string>();
+        public int currentWeight = 0;
 
-        public ItemLocation(Warehouse currentWarehouse, int row, int column, int shelf, String orientation)
+        public ItemLocation(int row, int column, int shelf, string orientation)
         {
-            this.currentWarehouse = currentWarehouse;
+            
             this.row = row;
             this.column = column;
             this.shelf = shelf;
