@@ -1,0 +1,41 @@
+using System;
+
+
+namespace CPEN_Term_Project.Models
+{
+    public class Restocking {
+
+        private int maxWeight;
+
+		private int currWeight; //will omit, need to fetch current weight of location somehow
+        public Restocking(){
+            this.maxWeight = 10;//needs to change 
+			this.currWeight = 0; //will omit
+    
+            
+        }
+        public void restockingItem(double weight, Item item) {
+			bool satisfied = false;
+			var row = new Random();
+			var col = new Random();
+			var shelf = new Random();
+			
+			
+			//will need to access itemlocation weight in the future
+			while(satisfied == false){
+				int r = row.Next(0,8);
+				int c = col.Next(0,5);
+				int s = shelf.Next(0,6);
+				
+				if((currWeight + weight) < maxWeight){
+					
+					item.getLocation().row = r;
+					item.getLocation().column = c;
+					item.getLocation().shelf = s;	
+                    satisfied = true;			
+				}
+			}
+			
+		}
+    }
+}

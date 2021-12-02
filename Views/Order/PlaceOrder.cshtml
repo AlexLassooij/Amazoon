@@ -1,0 +1,37 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Order
+@{
+    ViewBag.Title = "Order";
+    Order order = ViewData["order"] as Order;
+}
+
+<h1>Order Confirmation</h1>
+
+<table class="table">   
+        <tr>
+            <td>
+                <b>Customer Name</b>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => order.clientName)
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Items</b>
+            </td>
+        </tr>
+        @foreach (var item in order.items)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.name)
+                </td>
+            </tr>
+        }    
+</table>
+
