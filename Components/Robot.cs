@@ -16,7 +16,8 @@ namespace mongoTest.Components
         private int batteryLevel;
         private int currentWeight;
         private RobotTask currentTask;
-        private int[] location = new int[2] { 0, 0 };
+        private int positionX = 0;
+        private int positionY = 0;
         private List<Item> itemsInPossession;
         private String Id = Guid.NewGuid().ToString();
         private Mutex queueMutex;
@@ -74,12 +75,12 @@ namespace mongoTest.Components
         }
         private int getRobotRow()
         {
-            return this.location[0];
+            return this.positionX;
         }
 
         private int getRobotColumn()
         {
-            return this.location[1];
+            return this.positionY;
         }
 
         private void chargeBattery() {
@@ -120,18 +121,18 @@ namespace mongoTest.Components
 
         private void moveRobotVertically(int row)
         {
-            if (row > getRobotRow())
+            if (row > positionX)
             {
-                while (row > getRobotRow())
+                while (row > positionX)
                 {
-                    location[0] += 1;
+                    positionX += 1;
                     Thread.Sleep(500);
                 }
             } else
             {
-                while (getRobotRow() > row)
+                while (positionX > row)
                 {
-                    location[0] -= 1;
+                    positionX -= 1;
                     Thread.Sleep(500);
                 }
             }
@@ -139,11 +140,11 @@ namespace mongoTest.Components
 
         private void moveRobotHorizontally(int column)
         {
-            if (column > getRobotColumn())
+            if (column > positionY)
             {
-                while (column > getRobotColumn())
+                while (column > positionY)
                 {
-                    location[1] += 1;
+                    positionY += 1;
                     Thread.Sleep(500);
                 }
             }
@@ -151,7 +152,7 @@ namespace mongoTest.Components
             {
                 while (getRobotColumn() > column)
                 {
-                    location[1] -= 1;
+                    positionY -= 1;
                     Thread.Sleep(500);
                 }
             }

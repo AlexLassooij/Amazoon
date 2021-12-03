@@ -19,6 +19,8 @@ namespace mongoTest
     {
         public static void Main(string[] args)
         {
+            // brew services start mongodb/brew/mongodb-community
+            // mongosh
             initializeDB();
             initializeWarehouses();
             CreateHostBuilder(args).Build().Run();

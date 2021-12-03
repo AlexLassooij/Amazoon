@@ -20,6 +20,7 @@ namespace mongoTest.Components
         private Queue<Order> orderQueue;
 
         private Mutex robotQueueMutex = new Mutex();
+        private Mutex dockMutex = new Mutex();
         private Semaphore truckSemaphore;
         private Task[] robotTasks;
         private IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
@@ -120,15 +121,17 @@ namespace mongoTest.Components
         public void runWarehouse()
         {
             performInitialRestock();
-            currentWarehouse.addTruck(new Truck(TruckState.Loading, currentWarehouse));
+            DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
+            currentWarehouse.addTruck(deliveryTruck);
+            Task.Run(() => new DeliveryTruck(currentWarehouse, 0, 8).runTruck());
             initRobots();
+            initDocks();
 
            while (true)
            {
                 pollForNewOrders();
 
                 Console.WriteLine("Central computer running");
-
                 Thread.Sleep(1000);
            }
         }
@@ -142,25 +145,51 @@ namespace mongoTest.Components
             }
         }
 
-        private void pollForNewOrders()
+        private void initDocks()
         {
-            Console.WriteLine("polling for new orders");
-            List<Order> orders = _orders.Find(Order => true).ToList();
-            
-            foreach(Order order in orders)
+            // position Y of all docks will be below the bottom row of the warehouse
+            for (int i = 0; i < currentWarehouse.getNumDocks(); i++ )
             {
-                createTasksForUnhandledItems(order);
+                currentWarehouse.getDocks()[i] = new Dock(i + 1, i, currentWarehouse.getWarehouseRows(), DockState.Available);
             }
         }
 
-        // receives a new order,
-        // if an order exists where there exists items that
-        // are present in warehouse and have not been scheduled
-        // for pickup by robot, creates new tasks to load those items
-        private void createTasksForUnhandledItems(Order order)
+        private void pollForNewOrders()
+        {
+            Console.WriteLine("polling for new orders");
+
+            List<Order> orders = _orders.Find(Order => true).ToList();
+            List<Item> itemsInWarehouse = new List<Item>();
+
+            
+            foreach(Order order in orders)
+            {
+                // find all the items in this order that are available in this
+                // warehouse and have not been scheduled for loading
+                itemsInWarehouse = getItemsInWarehouse(order);
+                // only schedules task if the order contains any items that have not been
+                // been schedules for loading yet
+                if (itemsInWarehouse.Count > 0)
+                {
+                    DeliveryTruck deliveryTruck = isTruckAvailable(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
+                    // only schedules a task if there is a truck available to pick
+                    // up the items 
+                    if (deliveryTruck != null)
+                    {
+                        deliveryTruck.addWeight(getTotalItemWeight(itemsInWarehouse));
+                        deliveryTruck.addVolume(getTotalItemVolume(itemsInWarehouse));
+                        createLoadTask(itemsInWarehouse, deliveryTruck);
+                    }
+                }                                
+            }
+        }
+
+        // updates the database to reflect that items are going to be picked up
+        // for delivery
+        // adds a task to the queue to have robots load the items
+        private void createLoadTask(List<Item> itemsInWarehouse, Truck deliveryTruck)
         {
             // list of items in this order that are present in current warehouse
-            List<Item> itemsInWarehouse = new List<Item>();
             FilterDefinition<Item> filter = new BsonDocument
                 {
                     { "warehouseID", currentWarehouse.getID() },
@@ -169,20 +198,28 @@ namespace mongoTest.Components
 
             UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", ItemState.Loading);
 
+            foreach (Item item in itemsInWarehouse)
+            {                
+                _items.FindOneAndUpdate(filter, update);
+                item.itemState = ItemState.Loading;                
+            }
+
+            queueRobotTasks("load", itemsInWarehouse, deliveryTruck);            
+        }
+
+        private List<Item> getItemsInWarehouse(Order order)
+        {
+            List<Item> itemsInWarehouse = new List<Item>();
+
             foreach (Item item in order.items)
             {
                 if (item.warehouseID == currentWarehouse.getID() && item.itemState == ItemState.Purchased)
-                {
-                    _items.FindOneAndUpdate(filter, update);
-                    item.itemState = ItemState.Loading;
+                {                    
                     itemsInWarehouse.Add(item);
                 }
             }
-                Truck loadingTruck = isTruckAvailable(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
-            if (loadingTruck != null)
-            {
-                queueRobotTasks("load", itemsInWarehouse, loadingTruck);
-            }
+
+            return itemsInWarehouse;
         }
 
         // queues robot tasks for a particular Order
@@ -292,11 +329,11 @@ namespace mongoTest.Components
         
 
         // will be called before enqueueing a new robot tasks
-        public Truck isTruckAvailable(int orderWeight, int orderVolume)
+        public DeliveryTruck isTruckAvailable(int orderWeight, int orderVolume)
         {
-            foreach (Truck truck in currentWarehouse.getTrucks())
+            foreach (DeliveryTruck truck in currentWarehouse.getTrucks())
             {
-                if (truck.getTruckState() == TruckState.Loading)
+                if (truck.getTruckState() == TruckState.Docked)
                 {
                     if (orderWeight <= truck.getAvailableWeight() && orderVolume <= truck.getAvailableVolume())
                     {
@@ -306,15 +343,18 @@ namespace mongoTest.Components
             }
             return null;
         }
-
-        public Dock getAvailableStation() {
-            foreach(Dock dock in currentWarehouse.getDocks()) {
-                if (dock.isAvailable()) {
-                    return dock;
-                }                
-            }
-            return null;
+                
+        public Queue<RobotTask> GetRobotTasks() {
+            return robotTaskQueue;
         }
+
+        // have a polling method, checks for new orders every few seconds
+        // if new order exists : add new pick up tasks for robots
+
+        //public void addItem(Item item)
+        //{
+        //    Item item = 
+        //}
 
         //public Item[] Append(Item[] items, Item item)
         //{
@@ -326,18 +366,6 @@ namespace mongoTest.Components
         //    items.CopyTo(result, 0);
         //    result[items.Length] = item;
         //    return result;
-        //}
-
-        public Queue<RobotTask> GetRobotTasks() {
-            return robotTaskQueue;
-        }
-
-        // have a polling method, checks for new orders every few seconds
-        // if new order exists : add new pick up tasks for robots
-
-        //public void addItem(Item item)
-        //{
-        //    Item item = 
         //}
     }
 }

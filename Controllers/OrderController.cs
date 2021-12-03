@@ -25,13 +25,17 @@ namespace mongoTest.Controllers
             foreach(Item item in itemsFromDB)
             {
                 string name = item.name;
-                if (!itemViewDict.ContainsKey(name))
+                if (item.itemState == ItemState.Available)
                 {
-                    itemViewDict.Add(name, 1);
-                } else
-                {
-                    itemViewDict[name] += 1;
-                }
+                    if (!itemViewDict.ContainsKey(name))
+                    {
+                        itemViewDict.Add(name, 1);
+                    }
+                    else
+                    {
+                        itemViewDict[name] += 1;
+                    }
+                }                
             }
 
             foreach(var entry in itemViewDict)

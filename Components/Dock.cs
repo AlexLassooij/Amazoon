@@ -14,6 +14,7 @@ namespace mongoTest.Components
             
             this.DockID = DockID;
             this.positionX = positionX;
+            this.positionY = positionX;
             this.dockState = dockState;
         }
 

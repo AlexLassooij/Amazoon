@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using mongoTest.Models;
+using System.Threading;
 
 namespace mongoTest.Components
 {
@@ -10,12 +11,13 @@ namespace mongoTest.Components
         static private int MAX_VOLUME = 5000;
         private int currentWeight = 0;
         private int currentVolume = 0;
+        private string Id = Guid.NewGuid().ToString();
         private DateTime timeOfArrival { get; set; }
         private Warehouse assignedWarehouse { get; set; }
         private TruckState truckState { get; set; }
         private List<Item> loadedItems { get; set; }
-        private int truckPositionX {get; set;}
-        private int truckPositionY {get; set;}
+        private int positionX {get; set;}
+        private int positionY {get; set;}
         private Dock docks {get; set;}
 
         private int[] truckCapacity = new int[2]; // truckCapacity[0] = max carrying weight capacity
@@ -24,11 +26,11 @@ namespace mongoTest.Components
                                                          // truckCurrentCapacity[1] = current volume the truck is carrying
 
         // Default constructor for adding truck to warehouse
-        public Truck(TruckState truckState, Warehouse assignedWarehouse)
+        public Truck(Warehouse assignedWarehouse, int initPositionX, int initPositionY)
         {
-            this.truckState = truckState;            
             this.assignedWarehouse = assignedWarehouse;
-            this.truckState = TruckState.Loading;
+            positionX = initPositionX;
+            positionY = initPositionY;
         }
 
         // overload constructor for arriving truck
@@ -39,15 +41,30 @@ namespace mongoTest.Components
         //    this.truckState = TruckState.Arriving;
         //}
 
-        private Dock findAvailableDock(Dock[] listofDocks)
+        // truck says it has arrived
+        // truck searches through docks of the warehouse to see if any are available
+        // if not, it will wait in a loop until one becomes available
+        // once available, the truck will move towards the dock and dock itself there 
+        public void runTruck()
+        {            
+            notifyArrival();
+            Dock truckDock = null;
+            while ((truckDock = findAvailableDock()) == null)
+            {
+                Console.WriteLine($"Truck {Id} waiting for available dock");
+            }
+            // this ensures that no other truck attemps to use this dock while the truck makes its journey to the dock
+            reserveDock(truckDock);
+            moveTruckToDockingStation(truckDock);
+        }
+
+        private Dock findAvailableDock()
         {
-            Dock availableDock;
-            foreach(Dock dock in listofDocks)
+            foreach(Dock dock in assignedWarehouse.getDocks())
             {
                 if (dock.isAvailable())
-                {
-                    availableDock = dock;
-                    return availableDock;
+                {                    
+                    return dock;
                 }
                 else 
                 {
@@ -57,59 +74,102 @@ namespace mongoTest.Components
             return null;
         }
 
-        private int moveTruckToDockingStation(Truck truck, Dock availableDock)
+        private void moveTruckToDockingStation(Dock availableDock)
         {
             // let's assume trucks move in grids
             // let trucks be somewhere outside of the warehouse to start
             // and it finds its way to the available docking station
             // by navigating row and columns
 
-            int destinationX = availableDock.positionX;
-            int destinationY = availableDock.positionY;
+            moveTruckHorizontally(availableDock.positionX);
+            moveTruckVertically(availableDock.positionY);
 
-            int truckpositionX = truck.truckPositionX;
-            int truckpositionY = truck.truckPositionY;
-
-            // how far it is from the truck idling zone
-            int differenceX = destinationX - truckPositionX;
-            int differenceY = destinationY - truckpositionY;
-
-            // update truck coordinate
-            for (int i = 0; i < differenceX; i++)
+            if (isDocked(availableDock))
             {
-                truck.truckPositionX = truckpositionX - i;
-                //wait for gui to update
-                // once updated, continue the loop
+                availableDock.setDockState(DockState.Occupied);
+                notifyDocking();
+                Console.WriteLine($"Truck {Id} has been docked at dock {availableDock.DockID}");
             }
-
-            for (int j = 0; j < differenceY; j++)
-            {
-                truck.truckPositionY = truckpositionY - j;
-                //wait for gui to update
-                // once updated, continue the loop
-            }
-            int dockID = isDocked(availableDock);
             
             // returns the dockID of the docking station that the truck has docked
-            return dockID;
+        }        
+
+
+        private void moveTruckVertically(int row)
+        {
+            if (row > positionX)
+            {
+                while (row > positionX)
+                {
+                    positionX += 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    Thread.Sleep(500);
+                    
+                }
+            }
+            else
+            {
+                while (positionX > row)
+                {
+                    positionX -= 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    Thread.Sleep(500);
+
+                }
+            }
         }
-        private int isDocked(Dock availableDock)
+
+        private void moveTruckHorizontally(int column)
+        {
+            if (column > positionY)
+            {
+                while (column > positionY)
+                {
+                    positionY += 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    Thread.Sleep(500);
+                }
+            }
+            else
+            {
+                while (positionY > column)
+                {
+                    positionY -= 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    Thread.Sleep(500);
+                }
+            }
+        }
+
+        private void reserveDock(Dock dockToReserve)
+        {
+            dockToReserve.setDockState(DockState.Reserved);
+        }
+
+        private bool isDocked(Dock availableDock)
         {
             // if the truck position == available dock
-            if (this.truckPositionX == availableDock.positionX && this.truckPositionY == availableDock.positionY)
-            {
-                return this.docks.DockID;
-            }
-            else return 69420;
+            return (positionX == availableDock.positionX && positionY == availableDock.positionY);            
         }
-        private void notifyArrival(bool isTruckDocked)
+        
+
+        private void notifyArrival()
         {
-            // let the computer know that truck has arrived
-            if (isTruckDocked)
-            {
-                this.truckState = TruckState.Arrived;
-            }
+            // let the computer know that truck has arrived           
+            truckState = TruckState.Arrived;
+            Console.WriteLine($"Truck {Id} has arrived and is currently at X: {positionX} Y: {positionY}");
+
         }
+
+        // notifies computer that truck is docked and ready to be
+        // loaded / unloaded
+        private void notifyDocking()
+        {
+            // let the computer know that truck has arrived           
+            truckState = TruckState.Docked;
+            assignedWarehouse.addTruck(this);
+        }
+
         private void notifyDeparture(bool isTruckTaskDone)
         {
             // if some task for this truck is done
@@ -144,6 +204,16 @@ namespace mongoTest.Components
         public int getAvailableVolume()
         {
             return MAX_VOLUME - currentVolume;
+        }
+
+        public void addWeight(int weight)
+        {
+            currentWeight += weight;
+        }
+
+        public void addVolume(int volume)
+        {
+            currentVolume += volume;
         }
     }
 
