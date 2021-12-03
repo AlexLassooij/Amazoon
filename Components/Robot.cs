@@ -57,13 +57,18 @@ namespace mongoTest.Components
             if (task.getTaskType() == "load")
             {
                 foreach (Item item in task.getItems())
-                {
+                {                   
                     pickUpItem(item);
                 }
                 loadTruck(task.getAssignedTruck());
             }
+            // else if tasktype = restock
+            // pickupitemfromtruck()
+            // putintowarehouse, update item to available
             batteryLevel -= ENERGY_PER_TASK;
         }
+
+        // 
 
         private bool batterySufficientForTrip() {
             return batteryLevel >= 2 * ENERGY_PER_TASK;
@@ -87,7 +92,7 @@ namespace mongoTest.Components
             moveToLocation(0, computer.getWarehouse().getWarehouseRows());
             Thread.Sleep(ROBOT_CHARGING_TIME);
         }
-
+        
         public void pickUpItem(Item item)
         {
             // move robot to correct column first

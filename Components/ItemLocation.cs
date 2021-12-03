@@ -13,8 +13,7 @@ namespace mongoTest.Components
         public int currentWeight = 0;
 
         public ItemLocation(int row, int column, int shelf, string orientation)
-        {
-            
+        {            
             this.row = row;
             this.column = column;
             this.shelf = shelf;

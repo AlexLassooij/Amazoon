@@ -121,11 +121,12 @@ namespace mongoTest.Components
         public void runWarehouse()
         {
             performInitialRestock();
+            initRobots();
+            initDocks();
             DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
             currentWarehouse.addTruck(deliveryTruck);
             Task.Run(() => new DeliveryTruck(currentWarehouse, 0, 8).runTruck());
-            initRobots();
-            initDocks();
+            
 
            while (true)
            {

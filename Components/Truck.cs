@@ -52,6 +52,7 @@ namespace mongoTest.Components
             while ((truckDock = findAvailableDock()) == null)
             {
                 Console.WriteLine($"Truck {Id} waiting for available dock");
+                Thread.Sleep(500);
             }
             // this ensures that no other truck attemps to use this dock while the truck makes its journey to the dock
             reserveDock(truckDock);
@@ -94,7 +95,6 @@ namespace mongoTest.Components
             // returns the dockID of the docking station that the truck has docked
         }        
 
-
         private void moveTruckVertically(int row)
         {
             if (row > positionX)
@@ -103,8 +103,7 @@ namespace mongoTest.Components
                 {
                     positionX += 1;
                     Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
-                    Thread.Sleep(500);
-                    
+                    Thread.Sleep(500);                    
                 }
             }
             else
@@ -114,7 +113,6 @@ namespace mongoTest.Components
                     positionX -= 1;
                     Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
                     Thread.Sleep(500);
-
                 }
             }
         }
