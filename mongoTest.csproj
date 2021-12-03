@@ -5,6 +5,32 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Views\Home\Index.cshtml" />
+    <Content Remove="wwwroot\Home\imgs\amazoon.png" />
+    <Content Remove="wwwroot\Home\imgs\backcard1.jpg" />
+    <Content Remove="wwwroot\Home\imgs\backcard2.jpg" />
+    <Content Remove="wwwroot\Home\imgs\backcard3.jpg" />
+    <Content Remove="wwwroot\Home\imgs\black1-1.jpg" />
+    <Content Remove="wwwroot\Home\imgs\chess.jpg" />
+    <Content Remove="wwwroot\Home\imgs\chess.png" />
+    <Content Remove="wwwroot\Home\imgs\instantpot.jpg" />
+    <Content Remove="wwwroot\Home\imgs\instantpot.png" />
+    <Content Remove="wwwroot\Home\imgs\k.jpg" />
+    <Content Remove="wwwroot\Home\imgs\k.png" />
+    <Content Remove="wwwroot\Home\imgs\mg.jpg" />
+    <Content Remove="wwwroot\Home\imgs\mg.png" />
+    <Content Remove="wwwroot\Home\imgs\ps5.jpg" />
+    <Content Remove="wwwroot\Home\imgs\ps5.png" />
+    <Content Remove="wwwroot\Home\imgs\speakers.png" />
+    <Content Remove="wwwroot\Home\imgs\teddy.jpeg" />
+    <Content Remove="wwwroot\Home\imgs\teddy.png" />
+    <Content Remove="wwwroot\Home\imgs\tv.jpg" />
+    <Content Remove="wwwroot\Home\imgs\tv.png" />
+    <Content Remove="wwwroot\Home\imgs\wilson.jpg" />
+    <Content Remove="wwwroot\Home\imgs\wilson.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="MongoDB.Driver" />
     <None Remove="Views\Order\" />
     <None Remove="Components\" />
@@ -13,7 +39,70 @@
     <PackageReference Include="MongoDB.Driver" Version="2.14.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\Order\" />
+    <Folder Include="Views\Home\css\" />
+    <Folder Include="Views\Home\js\" />
     <Folder Include="Components\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Views\Home\Index.cshtml" />
+    <None Include="wwwroot\css\home.css" />
+    <None Include="wwwroot\fonts\Ember\.DS_Store" />
+    <None Include="wwwroot\fonts\Ember\Amazon-Ember-Medium.ttf" />
+    <None Include="wwwroot\fonts\Ember\Amazon-Ember-MediumItalic.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_Bd.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_BdIt.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_He.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_HeIt.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_Lt.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_LtIt.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_Rg.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_RgIt.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_Th.ttf" />
+    <None Include="wwwroot\fonts\Ember\AmazonEmber_ThIt.ttf" />
+    <None Include="wwwroot\Home\imgs\amazoon.png" />
+    <None Include="wwwroot\Home\imgs\backcard1.jpg" />
+    <None Include="wwwroot\Home\imgs\backcard2.jpg" />
+    <None Include="wwwroot\Home\imgs\backcard3.jpg" />
+    <None Include="wwwroot\Home\imgs\black1-1.jpg" />
+    <None Include="wwwroot\Home\imgs\chess.jpg" />
+    <None Include="wwwroot\Home\imgs\chess.png" />
+    <None Include="wwwroot\Home\imgs\instantpot.jpg" />
+    <None Include="wwwroot\Home\imgs\instantpot.png" />
+    <None Include="wwwroot\Home\imgs\k.jpg" />
+    <None Include="wwwroot\Home\imgs\k.png" />
+    <None Include="wwwroot\Home\imgs\mg.jpg" />
+    <None Include="wwwroot\Home\imgs\mg.png" />
+    <None Include="wwwroot\Home\imgs\ps5.jpg" />
+    <None Include="wwwroot\Home\imgs\ps5.png" />
+    <None Include="wwwroot\Home\imgs\speakers.png" />
+    <None Include="wwwroot\Home\imgs\teddy.jpeg" />
+    <None Include="wwwroot\Home\imgs\teddy.png" />
+    <None Include="wwwroot\Home\imgs\tv.jpg" />
+    <None Include="wwwroot\Home\imgs\tv.png" />
+    <None Include="wwwroot\Home\imgs\wilson.jpg" />
+    <None Include="wwwroot\Home\imgs\wilson.png" />
+    <None Include="wwwroot\imgs\amazoon.png" />
+    <None Include="wwwroot\imgs\backcard1.jpg" />
+    <None Include="wwwroot\imgs\backcard2.jpg" />
+    <None Include="wwwroot\imgs\backcard3.jpg" />
+    <None Include="wwwroot\imgs\black1-1.jpg" />
+    <None Include="wwwroot\imgs\chess.jpg" />
+    <None Include="wwwroot\imgs\chess.png" />
+    <None Include="wwwroot\imgs\instantpot.jpg" />
+    <None Include="wwwroot\imgs\instantpot.png" />
+    <None Include="wwwroot\imgs\k.jpg" />
+    <None Include="wwwroot\imgs\k.png" />
+    <None Include="wwwroot\imgs\mg.jpg" />
+    <None Include="wwwroot\imgs\mg.png" />
+    <None Include="wwwroot\imgs\ps5.jpg" />
+    <None Include="wwwroot\imgs\ps5.png" />
+    <None Include="wwwroot\imgs\speakers.png" />
+    <None Include="wwwroot\imgs\teddy.jpeg" />
+    <None Include="wwwroot\imgs\teddy.png" />
+    <None Include="wwwroot\imgs\tv.jpg" />
+    <None Include="wwwroot\imgs\tv.png" />
+    <None Include="wwwroot\imgs\wilson.jpg" />
+    <None Include="wwwroot\imgs\wilson.png" />
+    <None Include="wwwroot\js\home.js" />
   </ItemGroup>
 </Project>

@@ -15,6 +15,10 @@ namespace mongoTest.Controllers
     {
         IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
         // GET: /<controller>/
+        public IActionResult Start()
+        {
+            return View();
+        }
         public IActionResult Index()
         {            
             List<Item> itemsFromDB = _items.Find(Item => true).ToList();

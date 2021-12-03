@@ -55,7 +55,7 @@ namespace mongoTest
 
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Order}/{action=Index}/{id?}");
+                    pattern: "{controller=Order}/{action=Start}/{id?}");
             });
         }
     }
