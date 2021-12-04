@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using mongoTest.Models;
-
 namespace mongoTest.Components
 {
     public class CentralComputer
@@ -126,15 +125,64 @@ namespace mongoTest.Components
             DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
             currentWarehouse.addTruck(deliveryTruck);
             Task.Run(() => new DeliveryTruck(currentWarehouse, 0, 8).runTruck());
-            
 
-           while (true)
+            // this will make sure the truck is docked at an open dock
+            //var isTruckDocked = Task<bool>.Run(() =>
+            //{
+            //    restockTruck.runTruck();
+            //    });
+ 
+
+
+            while (true)
            {
                 pollForNewOrders();
 
                 Console.WriteLine("Central computer running");
                 Thread.Sleep(1000);
            }
+        }
+
+        private void initiateRestockingSequence(List<Item> restockOrder)
+        {
+            int defaultX = 0;
+            int defaultY = 8;
+
+            RestockTruck restockTruck = new RestockTruck(currentWarehouse, defaultX, defaultY);
+            currentWarehouse.addTruck(restockTruck);
+
+            // after this block is executed, we have whether the truck has 
+            // successfully done the following things:
+            // 1. notified arrival
+            // 2. found an available dock
+            // 3. reserved the said available dock
+            // 4. moved to the said available dock
+            // 5. and is docked
+            Task<bool> restockTruckTask = new Task<bool>(() => restockTruck.runTruck());
+            restockTruckTask.Start();
+            restockTruckTask.Wait();
+            bool isTruckDocked = restockTruckTask.Result;
+
+            if (isTruckDocked)
+            {
+                restockTruck.readyForUnloading();
+                createUnloadTask(restockOrder, restockTruck);
+                //updateInventory();
+            }
+            //if (unload_complete == true)
+            {
+                // set the truck's status to leaving
+                // set the dock that the truck was occupying free
+                restockTruck.readyToLeave();
+            }
+        }
+        private void getRobotsToCome()
+        {
+
+        }
+        private void getRobotsToUnload()
+        {
+
         }
 
         private void initRobots() {
@@ -185,6 +233,22 @@ namespace mongoTest.Components
             }
         }
 
+        // restocking Truck brings items of low numbers to the warehouse
+        // when it is docked, it calls upon available robots to come unload
+        // 
+        // This task then would involve upon receiving a restocking order:
+        //
+        // 1. calling robots to come to the docking station the truck is at
+        // 2. ordering robots to take items from the truck
+        // 3. ordering robots to go distribute the items on the shelves
+        //    according to the item description
+        // 4. updating the warehouse inventory
+        private void createUnloadTask(List<Item> restockingOrder, Truck restockTruck)
+        {
+
+            queueRobotTasks("unload", restockingOrder, restockTruck);
+        }
+
         // updates the database to reflect that items are going to be picked up
         // for delivery
         // adds a task to the queue to have robots load the items
@@ -230,20 +294,40 @@ namespace mongoTest.Components
         {
             int numTasks = 0;
             List<Item> itemsList = new List<Item>();
-            foreach (Item item in items)
+
+            if (taskType == "load")
             {
-                if (getTotalItemWeight(itemsList) + item.weight < Robot.getMaxWeight())
+                foreach (Item item in items)
                 {
-                    itemsList.Add(item);
+                    if (getTotalItemWeight(itemsList) + item.weight < Robot.getMaxWeight())
+                    {
+                        itemsList.Add(item);
+                    }
+                    else
+                    {
+                        // no need for mutex, since only one computer will modify it
+                        robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
+                        itemsList.Clear();
+                        numTasks += 1;
+                    }
                 }
-                else
+            }
+            else if (taskType == "unload")
+            {
+                int itemTotalWeight = 0;
+                foreach (Item item in items)
                 {
-                    // no need for mutex, since only one computer will modify it
+                    while (itemTotalWeight < Robot.getMaxWeight())
+                    {
+                        itemsList.Add(item);
+                        itemTotalWeight += item.weight;
+                    }
                     robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
                     itemsList.Clear();
                     numTasks += 1;
                 }
             }
+
             robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
         }
 
@@ -340,6 +424,18 @@ namespace mongoTest.Components
                     {
                         return truck;
                     }
+                }
+            }
+            return null;
+        }
+
+        public RestockTruck isRestockTruckAvailable()
+        {
+            foreach (RestockTruck truck in currentWarehouse.getTrucks())
+            {
+                if (truck.getTruckState() == TruckState.Docked)
+                {
+                    return truck;
                 }
             }
             return null;

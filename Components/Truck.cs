@@ -14,10 +14,10 @@ namespace mongoTest.Components
         private string Id = Guid.NewGuid().ToString();
         private DateTime timeOfArrival { get; set; }
         private Warehouse assignedWarehouse { get; set; }
-        private TruckState truckState { get; set; }
+        public TruckState truckState { get; set; }
         private List<Item> loadedItems { get; set; }
-        private int positionX {get; set;}
-        private int positionY {get; set;}
+        public int positionX {get; set;}
+        public int positionY {get; set;}
         private Dock docks {get; set;}
 
         private int[] truckCapacity = new int[2]; // truckCapacity[0] = max carrying weight capacity
@@ -29,8 +29,8 @@ namespace mongoTest.Components
         public Truck(Warehouse assignedWarehouse, int initPositionX, int initPositionY)
         {
             this.assignedWarehouse = assignedWarehouse;
-            positionX = initPositionX;
-            positionY = initPositionY;
+            this.positionX = initPositionX;
+            this.positionY = initPositionY;
         }
 
         // overload constructor for arriving truck
@@ -45,7 +45,7 @@ namespace mongoTest.Components
         // truck searches through docks of the warehouse to see if any are available
         // if not, it will wait in a loop until one becomes available
         // once available, the truck will move towards the dock and dock itself there 
-        public void runTruck()
+        public bool runTruck()
         {            
             notifyArrival();
             Dock truckDock = null;
@@ -57,6 +57,9 @@ namespace mongoTest.Components
             // this ensures that no other truck attemps to use this dock while the truck makes its journey to the dock
             reserveDock(truckDock);
             moveTruckToDockingStation(truckDock);
+            
+            return isDocked(truckDock);
+            
         }
 
         private Dock findAvailableDock()
