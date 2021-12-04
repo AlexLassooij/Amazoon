@@ -5,25 +5,56 @@
 @{
     ViewBag.Title = "Order";
 }
-
+<link rel="stylesheet" href=@Url.Content("~/css/order.css")>
 <h1>Place an order</h1>
 <h2>Available Items</h2>
+<header>
+    <a href="~/"><img class="logo" src=@Url.Content("~/imgs/amazoon.png")></a>
+    <button class="selection" onclick="gotoOrderPage()">ALL Products</button>
+    <button class="selection" onclick="gotoOrderPage()">Grocery</button>
+    <button class="selection" onclick="gotoOrderPage()">Home</button>
+    <button class="selection" onclick="gotoOrderPage()">Gifts</button>
+    <button class="selection" onclick="gotoOrderPage()">Books</button>
 
+    <script>
+        function gotoOrderPage() {
+            window.location.href = "Index";
+        }
+    </script>
+</header>
 <table class="table">
+    @{ 
+        int i = 0;
+    }
     @foreach (var item in Model)
     {
+        string id = item.name;
+        string increment = "increment(" + "'" + id + "'" + ")";
+        string decrement = "decrement(" + "'" + id + "'" + ")";
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.amountAvailable)
+                <button onclick="@decrement">-</button>
+                <input id="@item.name" value="0" type=number min=0 max=@item.amountAvailable>
+                <button onclick="@increment">+</button>
+                Max quantity : @Html.DisplayFor(modelItem => item.amountAvailable)
             </td>
         </tr>
     }
 </table>
-
-<form action="Order/PlaceOrder" method="post">
+<script>
+    function increment(id) {
+        console.log(`${id}`)
+        document.getElementById(id).stepUp();
+    }
+    function decrement(id) {
+        console.log(`${id}`)
+        document.getElementById(id).stepDown();
+    }
+</script>
+<form action="PlaceOrder" method="post">
     <table>
         <tr>
             <td>Enter Name: </td>
