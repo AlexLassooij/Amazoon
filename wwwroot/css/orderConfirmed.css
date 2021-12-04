@@ -23,12 +23,6 @@ header {
     height: 9.5%;
 }
 
-.quantityChange {
-    background-color: #FD8505;
-    font-weight: bold;
-    border-radius: 1000px;
-}
-
 .selection {
     background-color: #FD8505;
     font-weight: bold;
@@ -40,9 +34,9 @@ header {
     font-size: 15px;
 }
 
-.selection:hover {
-    box-shadow: 0 0 20px 5px white;
-}
+    .selection:hover {
+        box-shadow: 0 0 20px 5px white;
+    }
 
 .logo {
     max-width: 10vw;
@@ -51,5 +45,5 @@ header {
 
 .table {
     position : absolute;
-    top : 25%;
+    top : 20%;
 }

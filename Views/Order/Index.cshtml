@@ -6,8 +6,12 @@
     ViewBag.Title = "Order";
 }
 <link rel="stylesheet" href=@Url.Content("~/css/order.css")>
-<h1>Place an order</h1>
-<h2>Available Items</h2>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    setTimeout(function () {
+        $("footer").remove();
+    }, 1);
+</script>
 <header>
     <a href="~/"><img class="logo" src=@Url.Content("~/imgs/amazoon.png")></a>
     <button class="selection" onclick="gotoOrderPage()">ALL Products</button>
@@ -22,39 +26,32 @@
         }
     </script>
 </header>
+
+<h1 style="position : absolute;top:15%;">Place an order</h1>
+
 <table class="table">
-    @{ 
+    @{
         int i = 0;
     }
     @foreach (var item in Model)
     {
         string id = item.name;
-        string increment = "increment(" + "'" + id + "'" + ")";
-        string decrement = "decrement(" + "'" + id + "'" + ")";
+        string increment = "increment(" + "'" + id + "'," + item.amountAvailable + ")";
+        string decrement = "decrement(" + "'" + id + "'," + item.amountAvailable + ")";
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.name)
             </td>
             <td>
-                <button onclick="@decrement">-</button>
+                <button class="quantityChange" onclick="@decrement">-</button>
                 <input id="@item.name" value="0" type=number min=0 max=@item.amountAvailable>
-                <button onclick="@increment">+</button>
+                <button class="quantityChange" onclick="@increment">+</button>
                 Max quantity : @Html.DisplayFor(modelItem => item.amountAvailable)
             </td>
         </tr>
     }
 </table>
-<script>
-    function increment(id) {
-        console.log(`${id}`)
-        document.getElementById(id).stepUp();
-    }
-    function decrement(id) {
-        console.log(`${id}`)
-        document.getElementById(id).stepDown();
-    }
-</script>
-<form action="PlaceOrder" method="post">
+<form action="PlaceOrder" method="post" class="table" style="top : 95%;position:absolute;">
     <table>
         <tr>
             <td>Enter Name: </td>
@@ -65,11 +62,24 @@
         <tr>
             <td>Enter items as comma separated list of name and amount, e.g. pants 5, broccoli 2 </td>
         </tr>
-        <tr>            
-            <td><input type="text" name="orderDetails" /></td>
+        <tr>
+            <td><input id="itemQuantity" type="text" name="orderDetails" /></td>
         </tr>
         <tr>
             <td colspan="2"><input type="submit" value="Submit Form" /></td>
         </tr>
     </table>
 </form>
+
+<style>
+    .quantityChange {
+        border-radius: 2000px;
+        background-color: #FD8505;
+        font-weight: bold;
+    }
+
+        .quantityChange:hover {
+            background-color: #b85f00;
+        }
+</style>
+<script src=@Url.Content("~/js/order.js") async defer></script>

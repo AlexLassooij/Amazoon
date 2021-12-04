@@ -28,6 +28,7 @@
     <Content Remove="wwwroot\Home\imgs\tv.png" />
     <Content Remove="wwwroot\Home\imgs\wilson.jpg" />
     <Content Remove="wwwroot\Home\imgs\wilson.png" />
+    <Content Remove="wwwroot\js\order.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -103,6 +104,7 @@
     <None Include="wwwroot\imgs\tv.png" />
     <None Include="wwwroot\imgs\wilson.jpg" />
     <None Include="wwwroot\imgs\wilson.png" />
+    <None Include="wwwroot\js\order.js" />
     <None Include="wwwroot\js\home.js" />
   </ItemGroup>
 </Project>

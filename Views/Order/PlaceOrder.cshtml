@@ -7,31 +7,67 @@
     Order order = ViewData["order"] as Order;
 }
 
-<h1>Order Confirmation</h1>
+<link rel="stylesheet" href=@Url.Content("~/css/orderConfirmed.css")>
+<script>
+    setTimeout(function () {
+        $("footer").remove();
+    }, 1);
+</script>
+<!--[if lt IE 7]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<header>
+    <a href="~/"><img class="logo" src=@Url.Content("~/imgs/amazoon.png")></a>
+    <button class="selection" onclick="gotoOrderPage()">ALL Products</button>
+    <button class="selection" onclick="gotoOrderPage()">Grocery</button>
+    <button class="selection" onclick="gotoOrderPage()">Home</button>
+    <button class="selection" onclick="gotoOrderPage()">Gifts</button>
+    <button class="selection" onclick="gotoOrderPage()">Books</button>
 
-<table class="table">   
-        <tr>
-            <td>
-                <b>Customer Name</b>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => order.clientName)
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <b>Items</b>
-            </td>
-        </tr>
-        @foreach (var item in order.items)
+    <script>
+            function gotoOrderPage() {
+                window.location.href = "Order/Index";
+            }
+    </script>
+</header>
+<h1 style="top:12%;position:absolute;">Order Confirmation</h1>
+
+<table class="table">
+    <tr>
+        <td>
+            <b>Customer Name</b> : @Html.DisplayFor(modelItem => order.clientName)
+        </td>
+    </tr>
+    <!--tr>
+        <td>
+            <b>Items</b>
+        </td>
+    </tr-->
+    @{Dictionary<string, int> orderDict = new Dictionary<string, int>(); }
+    @foreach (var item in order.items)
+    {
+        if (!orderDict.ContainsKey(item.name))
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.name)
-                </td>
-            </tr>
-        }    
+            orderDict.Add(item.name, 1);
+        }
+        else
+        {
+            orderDict[item.name]++;
+        }
+        <!--tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.name)
+            </td>
+        </tr-->
+    }
+    @foreach (string key in orderDict.Keys)
+    {
+        <tr>
+            <td>
+                @key x <i>@orderDict[key]</i>
+            </td>
+        </tr>
+    }
 </table>
 
