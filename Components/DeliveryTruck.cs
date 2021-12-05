@@ -1,4 +1,6 @@
 ﻿using System;
+
+
 namespace mongoTest.Components
 {
     public class DeliveryTruck : Truck
@@ -6,5 +8,11 @@ namespace mongoTest.Components
         public DeliveryTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY) :
             base(assignedWarehouse, initPositionX, initPositionY)
         { }
-    }
+
+        override
+        public void RunTruck()
+        {
+            NotifyArrival();
+        }
+    }    
 }

@@ -33,7 +33,7 @@ namespace mongoTest.Components
         // what does the robot need to do
         // check its battery level
         // consume tasks
-        public void runRobot() {
+        public void RunRobot() {
             while(true) {
                 if (batterySufficientForTrip()) {
                     queueMutex.WaitOne();
@@ -42,25 +42,25 @@ namespace mongoTest.Components
                     if (successfulDequeue)
                     {
                         Console.WriteLine("Robot executing task");
-                        executeRobotTask(currentTask);
+                        ExecuteRobotTask(currentTask);
                     }
                 } else {
-                    chargeBattery();
+                    ChargeBattery();
                 }
                 Console.WriteLine("Robot running - " + Id);
                 Thread.Sleep(1000);
             }
         }   
 
-        private void executeRobotTask(RobotTask task)
+        private void ExecuteRobotTask(RobotTask task)
         {
             if (task.getTaskType() == "load")
             {
                 foreach (Item item in task.getItems())
                 {                   
-                    pickUpItem(item);
+                    PickUpItem(item);
                 }
-                loadTruck(task.getAssignedTruck());
+                LoadItemsIntoTruck(task.getAssignedTruck());
             }
             // else if tasktype = restock
             // pickupitemfromtruck()
@@ -74,43 +74,51 @@ namespace mongoTest.Components
             return batteryLevel >= 2 * ENERGY_PER_TASK;
         }
 
-        static public int getMaxWeight()
+        static public int GetMaxWeight()
         {
             return MAX_WEIGHT;
         }
-        private int getRobotRow()
+        private int GetRobotRow()
         {
             return this.positionX;
         }
 
-        private int getRobotColumn()
+        private int GetRobotColumn()
         {
             return this.positionY;
         }
 
-        private void chargeBattery() {
-            moveToLocation(0, computer.getWarehouse().getWarehouseRows());
+        private void ChargeBattery() {
+            MoveToLocation(0, computer.GetWarehouse().getWarehouseRows(), "right");
             Thread.Sleep(ROBOT_CHARGING_TIME);
         }
         
-        public void pickUpItem(Item item)
+        public void PickUpItem(Item item)
         {
+            foreach (ItemLocation location in computer.GetInventoryLocations())
+            {
+                if (location.items.Contains(item.Id))
+                {
+                    // moveToLocation is not fully implemented
+                    MoveToLocation(location.row, location.column, location.orientation);
+                }
+            }
             // move robot to correct column first
             //moveToLocation(item.getLocation().row, item.getLocation().column);
             
         }
 
-        private void moveToLocation(int row, int column) {
-            if (column != getRobotColumn())
+        private void MoveToLocation(int row, int column, string orientation) {
+            if (column != GetRobotColumn())
             {
                 // if the next item is in the top half of warehouse, move to top,
                 // else move to bottom
-                if (row < this.computer.getWarehouse().getWarehouseRows() / 2)
+                if (row < this.computer.GetWarehouse().getWarehouseRows() / 2)
                 {
                     moveRobotVertically(0);
                 } else
                 {
-                    moveRobotVertically(computer.getWarehouse().getWarehouseRows() - 1);
+                    moveRobotVertically(computer.GetWarehouse().getWarehouseRows() - 1);
                 }
 
                 moveRobotHorizontally(column);
@@ -118,7 +126,7 @@ namespace mongoTest.Components
             }
         }
 
-        public void loadTruck(Truck truck)
+        public void LoadItemsIntoTruck(Truck truck)
         {
 
         }
@@ -155,7 +163,7 @@ namespace mongoTest.Components
             }
             else
             {
-                while (getRobotColumn() > column)
+                while (GetRobotColumn() > column)
                 {
                     positionY -= 1;
                     Thread.Sleep(500);

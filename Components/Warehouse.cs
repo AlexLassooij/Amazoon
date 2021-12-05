@@ -93,5 +93,10 @@ namespace mongoTest.Components
         {
             return ID;
         }
+
+        public CentralComputer getComputer()
+        {
+            return centralComputer;
+        }
     }
 }

@@ -10,16 +10,20 @@ namespace mongoTest.Components
 {
     public class CentralComputer
     {
+        public static int DEFAULT_RESTOCK_AMOUNT = 10;
+        public static int MIN_AMOUNT_NEEDED = 5;
         private Warehouse currentWarehouse;
         private List<Item> inventory = new List<Item>();
         private List<ItemLocation> inventoryLocations = new List<ItemLocation>();
+        private List<Item> restockItems = new List<Item>();
 
         // queue should probably be moved to warehouse
         private Queue<RobotTask> robotTaskQueue = new Queue<RobotTask>();
         private Queue<Order> orderQueue;
+        
 
         private Mutex robotQueueMutex = new Mutex();
-        private Mutex dockMutex = new Mutex();
+        public Mutex dockMutex = new Mutex();
         private Semaphore truckSemaphore;
         private Task[] robotTasks;
         private IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
@@ -45,7 +49,7 @@ namespace mongoTest.Components
             this.currentWarehouse = currentWarehouse;
             truckSemaphore = new Semaphore(0, currentWarehouse.getNumDocks());
             robotTasks = new Task[currentWarehouse.numRobots];            
-            runWarehouse();
+            RunWarehouse();
         }
 
         //////////////////////////////////////////////////////////////////////// Central Computer & Truck interaction ////////////////////////////////////////////////////////////////////////
@@ -109,23 +113,15 @@ namespace mongoTest.Components
         //        robots[i] = new Robot();
         //        var robot = robots[i];                
         //    }
-        //}
-
-        public Warehouse getWarehouse()
-        {
-            return this.currentWarehouse;
-        }
+        //}       
 
         // central function of the computer, will always run
-        public void runWarehouse()
+        public void RunWarehouse()
         {
-            performInitialRestock();
-            initRobots();
-            initDocks();
-            DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
-            currentWarehouse.addTruck(deliveryTruck);
-            Task.Run(() => new DeliveryTruck(currentWarehouse, 0, 8).runTruck());
-
+            PerformInitialRestock();
+            InitRobots();
+            InitDocks();
+            CreateDeliveryTruck();
             // this will make sure the truck is docked at an open dock
             //var isTruckDocked = Task<bool>.Run(() =>
             //{
@@ -137,64 +133,115 @@ namespace mongoTest.Components
             while (true)
            {
                 pollForNewOrders();
+                CheckLowStockItems();
 
                 Console.WriteLine("Central computer running");
                 Thread.Sleep(1000);
            }
         }
 
-        private void initiateRestockingSequence(List<Item> restockOrder)
+        private void CheckLowStockItems()
+        {
+            Dictionary<string, int> itemAmountDictioanry = new Dictionary<string, int>();
+
+            // checks how many of each item are in stock
+            foreach (Item item in inventory)
+            {
+                string name = item.name;
+                if (item.itemState == ItemState.Available)
+                {
+                    if (!itemAmountDictioanry.ContainsKey(name))
+                    {
+                        itemAmountDictioanry.Add(name, 1);
+                    }
+                    else
+                    {
+                        itemAmountDictioanry[name] += 1;
+                    }
+                }
+            }
+
+            // checks if any items in the warehouse are low in stock
+            foreach (var dictEntry in itemAmountDictioanry)
+            {
+                if (dictEntry.Value < MIN_AMOUNT_NEEDED)
+                {
+                    // adds items to a restock list
+                    AddItemsToRestock(dictEntry.Key);
+                }
+            }
+        }
+
+        // adds the required items to the item to restock list
+
+        public void AddItemsToRestock(string itemName)
+        {
+            int[] itemattributes = ItemAttribute.GetItemAttributes(itemName);
+            int weight = itemattributes[0];
+            int volume = itemattributes[1];
+
+            for (int i = 0; i < DEFAULT_RESTOCK_AMOUNT; i++)
+            {
+                
+
+                Item newItem = new Item
+                {
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    name = itemName,
+                    weight = weight,
+                    volume = volume,
+                    itemState = ItemState.Available,
+                    warehouseID = currentWarehouse.getID(),
+                };
+
+                
+                if ((getTotalItemWeight(restockItems) + weight) <= Truck.MAX_WEIGHT && (getTotalItemVolume(restockItems) + volume) <= Truck.MAX_VOLUME)
+                {
+                    // keeps adding items to restock list until a single truck can no longer
+                    // fit all items
+                    restockItems.Add(newItem);
+                } else
+                {
+                    // if truck is full, dispatches a restocking truck,
+                    // then keeps adding the rest (if any left) of the items to
+                    // the list for another truck to bring
+                    Console.WriteLine($"Dispatching a restocking truck with total weight : {getTotalItemWeight(restockItems)} and volume : {getTotalItemVolume(restockItems)} and the following items: " + restockItems.ToString());
+                    CreateRestockingTruck(restockItems);
+                    restockItems.Clear();
+                }
+            }
+        }
+
+        public void CreateDeliveryTruck()
+        {
+            DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
+            currentWarehouse.addTruck(deliveryTruck);
+            Task.Run(() => new DeliveryTruck(currentWarehouse, 0, 8).RunTruck());
+        }
+
+        private void CreateRestockingTruck(List<Item> restockItems)
         {
             int defaultX = 0;
             int defaultY = 8;
 
-            RestockTruck restockTruck = new RestockTruck(currentWarehouse, defaultX, defaultY);
+            RestockTruck restockTruck = new RestockTruck(currentWarehouse, defaultX, defaultY, restockItems);
             currentWarehouse.addTruck(restockTruck);
 
-            // after this block is executed, we have whether the truck has 
-            // successfully done the following things:
-            // 1. notified arrival
-            // 2. found an available dock
-            // 3. reserved the said available dock
-            // 4. moved to the said available dock
-            // 5. and is docked
-            Task<bool> restockTruckTask = new Task<bool>(() => restockTruck.runTruck());
-            restockTruckTask.Start();
-            restockTruckTask.Wait();
-            bool isTruckDocked = restockTruckTask.Result;
+            
+            Task restockTruckTask = new Task(() => restockTruck.RunTruck());
+            
+        }        
 
-            if (isTruckDocked)
-            {
-                restockTruck.readyForUnloading();
-                createUnloadTask(restockOrder, restockTruck);
-                //updateInventory();
-            }
-            //if (unload_complete == true)
-            {
-                // set the truck's status to leaving
-                // set the dock that the truck was occupying free
-                restockTruck.readyToLeave();
-            }
-        }
-        private void getRobotsToCome()
-        {
-
-        }
-        private void getRobotsToUnload()
-        {
-
-        }
-
-        private void initRobots() {
+        private void InitRobots() {
             for (int i = 0; i < currentWarehouse.numRobots; i++) {
                 currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex);
                 Robot newRobot = currentWarehouse.getRobots()[i];
-                Task t = Task.Run(() => newRobot.runRobot());
+                Task t = Task.Run(() => newRobot.RunRobot());
                 // robotTasks[i] = t;
             }
         }
 
-        private void initDocks()
+        private void InitDocks()
         {
             // position Y of all docks will be below the bottom row of the warehouse
             for (int i = 0; i < currentWarehouse.getNumDocks(); i++ )
@@ -215,19 +262,19 @@ namespace mongoTest.Components
             {
                 // find all the items in this order that are available in this
                 // warehouse and have not been scheduled for loading
-                itemsInWarehouse = getItemsInWarehouse(order);
+                itemsInWarehouse = GetItemsInWarehouse(order);
                 // only schedules task if the order contains any items that have not been
                 // been schedules for loading yet
                 if (itemsInWarehouse.Count > 0)
                 {
-                    DeliveryTruck deliveryTruck = isTruckAvailable(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
+                    DeliveryTruck deliveryTruck = IsTruckAvailable(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
                     // only schedules a task if there is a truck available to pick
                     // up the items 
                     if (deliveryTruck != null)
                     {
                         deliveryTruck.addWeight(getTotalItemWeight(itemsInWarehouse));
                         deliveryTruck.addVolume(getTotalItemVolume(itemsInWarehouse));
-                        createLoadTask(itemsInWarehouse, deliveryTruck);
+                        CreateLoadTask(itemsInWarehouse, deliveryTruck);
                     }
                 }                                
             }
@@ -243,16 +290,16 @@ namespace mongoTest.Components
         // 3. ordering robots to go distribute the items on the shelves
         //    according to the item description
         // 4. updating the warehouse inventory
-        private void createUnloadTask(List<Item> restockingOrder, Truck restockTruck)
+        public void CreateUnloadTask(List<Item> restockingOrder, Truck restockTruck)
         {
 
-            queueRobotTasks("unload", restockingOrder, restockTruck);
+            QueueRobotTasks("unload", restockingOrder, restockTruck);
         }
 
         // updates the database to reflect that items are going to be picked up
         // for delivery
         // adds a task to the queue to have robots load the items
-        private void createLoadTask(List<Item> itemsInWarehouse, Truck deliveryTruck)
+        private void CreateLoadTask(List<Item> itemsInWarehouse, Truck deliveryTruck)
         {
             // list of items in this order that are present in current warehouse
             FilterDefinition<Item> filter = new BsonDocument
@@ -269,10 +316,10 @@ namespace mongoTest.Components
                 item.itemState = ItemState.Loading;                
             }
 
-            queueRobotTasks("load", itemsInWarehouse, deliveryTruck);            
+            QueueRobotTasks("load", itemsInWarehouse, deliveryTruck);            
         }
 
-        private List<Item> getItemsInWarehouse(Order order)
+        private List<Item> GetItemsInWarehouse(Order order)
         {
             List<Item> itemsInWarehouse = new List<Item>();
 
@@ -290,7 +337,7 @@ namespace mongoTest.Components
         // queues robot tasks for a particular Order
         // this will happen after a new order comes in and there is a truck
         // available to ship this order
-        private void queueRobotTasks(string taskType, List<Item> items, Truck truck)
+        private void QueueRobotTasks(string taskType, List<Item> items, Truck truck)
         {
             int numTasks = 0;
             List<Item> itemsList = new List<Item>();
@@ -299,14 +346,16 @@ namespace mongoTest.Components
             {
                 foreach (Item item in items)
                 {
-                    if (getTotalItemWeight(itemsList) + item.weight < Robot.getMaxWeight())
+                    if (getTotalItemWeight(itemsList) + item.weight < Robot.GetMaxWeight())
                     {
                         itemsList.Add(item);
                     }
                     else
                     {
                         // no need for mutex, since only one computer will modify it
+                        robotQueueMutex.WaitOne();
                         robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
+                        robotQueueMutex.ReleaseMutex();
                         itemsList.Clear();
                         numTasks += 1;
                     }
@@ -317,7 +366,7 @@ namespace mongoTest.Components
                 int itemTotalWeight = 0;
                 foreach (Item item in items)
                 {
-                    while (itemTotalWeight < Robot.getMaxWeight())
+                    while (itemTotalWeight < Robot.GetMaxWeight())
                     {
                         itemsList.Add(item);
                         itemTotalWeight += item.weight;
@@ -332,7 +381,7 @@ namespace mongoTest.Components
         }
 
         // will only be called at start to magically add all items to warehouse
-        private void performInitialRestock()
+        private void PerformInitialRestock()
         {
             List<Item> items = _items.Find(item => item.warehouseID == currentWarehouse.getID()).ToList();
             foreach (Item item in items)
@@ -345,7 +394,7 @@ namespace mongoTest.Components
             }
         }
 
-        private void addItemsToDatabase(List<Item> items)
+        private void AddItemsToDatabase(List<Item> items)
         {            
                 _items.InsertMany(items);            
         }
@@ -359,7 +408,7 @@ namespace mongoTest.Components
             string orientation = new List<string>() { "right", "left" }[rand.Next(0,2)];
 
             ItemLocation location =  new ItemLocation(row, column, shelf, orientation);
-            if (!willItemFitOnShelf(item, location))
+            if (!WillItemFitOnShelf(item, location))
             {
                 location = GenerateRandomLocation(item);
             }
@@ -367,7 +416,7 @@ namespace mongoTest.Components
             return location;
         }
 
-        private bool willItemFitOnShelf(Item item, ItemLocation location)
+        private bool WillItemFitOnShelf(Item item, ItemLocation location)
         {
             return item.weight + location.currentWeight <= Warehouse.MAX_SHELF_WEIGHT;
         }
@@ -414,11 +463,11 @@ namespace mongoTest.Components
         
 
         // will be called before enqueueing a new robot tasks
-        public DeliveryTruck isTruckAvailable(int orderWeight, int orderVolume)
+        public DeliveryTruck IsTruckAvailable(int orderWeight, int orderVolume)
         {
             foreach (DeliveryTruck truck in currentWarehouse.getTrucks())
             {
-                if (truck.getTruckState() == TruckState.Docked)
+                if (truck.GetTruckState() == TruckState.Docked)
                 {
                     if (orderWeight <= truck.getAvailableWeight() && orderVolume <= truck.getAvailableVolume())
                     {
@@ -429,11 +478,11 @@ namespace mongoTest.Components
             return null;
         }
 
-        public RestockTruck isRestockTruckAvailable()
+        public RestockTruck IsRestockTruckAvailable()
         {
             foreach (RestockTruck truck in currentWarehouse.getTrucks())
             {
-                if (truck.getTruckState() == TruckState.Docked)
+                if (truck.GetTruckState() == TruckState.Docked)
                 {
                     return truck;
                 }
@@ -443,6 +492,16 @@ namespace mongoTest.Components
                 
         public Queue<RobotTask> GetRobotTasks() {
             return robotTaskQueue;
+        }
+
+        public Warehouse GetWarehouse()
+        {
+            return currentWarehouse;
+        }
+
+        public List<ItemLocation> GetInventoryLocations()
+        {
+            return inventoryLocations;
         }
 
         // have a polling method, checks for new orders every few seconds

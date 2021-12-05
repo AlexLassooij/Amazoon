@@ -5,20 +5,20 @@ using System.Threading;
 
 namespace mongoTest.Components
 {
-    public class Truck
+    public abstract class Truck
     {
-        static private int MAX_WEIGHT = 5000;
-        static private int MAX_VOLUME = 5000;
-        private int currentWeight = 0;
-        private int currentVolume = 0;
-        private string Id = Guid.NewGuid().ToString();
-        private DateTime timeOfArrival { get; set; }
-        private Warehouse assignedWarehouse { get; set; }
-        public TruckState truckState { get; set; }
-        private List<Item> loadedItems { get; set; }
-        public int positionX {get; set;}
-        public int positionY {get; set;}
-        private Dock docks {get; set;}
+        static public int MAX_WEIGHT = 5000;
+        static public int MAX_VOLUME = 5000;
+        public int currentWeight = 0;
+        public int currentVolume = 0;
+        public string Id = Guid.NewGuid().ToString();
+        public DateTime TimeOfArrival { get; set; }
+        public Warehouse AssignedWarehouse { get; set; }
+        public TruckState TruckState { get; set; }
+        public List<Item> LoadedItems { get; set; }
+        public int PositionX {get; set;}
+        public int PositionY {get; set;}
+        private Dock Docks {get; set;}
 
         private int[] truckCapacity = new int[2]; // truckCapacity[0] = max carrying weight capacity
                                                   // truckCapacity[1] = max carrying volume capacity 
@@ -26,11 +26,11 @@ namespace mongoTest.Components
                                                          // truckCurrentCapacity[1] = current volume the truck is carrying
 
         // Default constructor for adding truck to warehouse
-        public Truck(Warehouse assignedWarehouse, int initPositionX, int initPositionY)
+        public Truck(Warehouse AssignedWarehouse, int InitPositionX, int InitPositionY)
         {
-            this.assignedWarehouse = assignedWarehouse;
-            this.positionX = initPositionX;
-            this.positionY = initPositionY;
+            this.AssignedWarehouse = AssignedWarehouse;
+            this.PositionX = InitPositionX;
+            this.PositionY = InitPositionY;
         }
 
         // overload constructor for arriving truck
@@ -45,29 +45,24 @@ namespace mongoTest.Components
         // truck searches through docks of the warehouse to see if any are available
         // if not, it will wait in a loop until one becomes available
         // once available, the truck will move towards the dock and dock itself there 
-        public bool runTruck()
-        {            
-            notifyArrival();
-            Dock truckDock = null;
-            while ((truckDock = findAvailableDock()) == null)
-            {
-                Console.WriteLine($"Truck {Id} waiting for available dock");
-                Thread.Sleep(500);
-            }
-            // this ensures that no other truck attemps to use this dock while the truck makes its journey to the dock
-            reserveDock(truckDock);
-            moveTruckToDockingStation(truckDock);
-            
-            return isDocked(truckDock);
-            
+        public abstract void RunTruck();
+
+
+        public void ReadyToLeave(Dock truckDock)
+        {
+            Console.WriteLine($"Restock truck is empty and is leaving.");
+            TruckState = TruckState.Departed;
+            truckDock.setDockState(DockState.Available);
         }
 
-        private Dock findAvailableDock()
+        public Dock FindAvailableDock()
         {
-            foreach(Dock dock in assignedWarehouse.getDocks())
+            foreach(Dock dock in AssignedWarehouse.getDocks())
             {
                 if (dock.isAvailable())
-                {                    
+                {
+                    // this ensures that no other truck attemps to use this dock while the truck makes its journey to the dock   
+                    ReserveDock(dock); 
                     return dock;
                 }
                 else 
@@ -78,121 +73,121 @@ namespace mongoTest.Components
             return null;
         }
 
-        private void moveTruckToDockingStation(Dock availableDock)
+        public void MoveTruckToDockingStation(Dock availableDock)
         {
             // let's assume trucks move in grids
             // let trucks be somewhere outside of the warehouse to start
             // and it finds its way to the available docking station
             // by navigating row and columns
 
-            moveTruckHorizontally(availableDock.positionX);
-            moveTruckVertically(availableDock.positionY);
+            MoveTruckHorizontally(availableDock.positionX);
+            MoveTruckVertically(availableDock.positionY);
 
-            if (isDocked(availableDock))
+            if (IsDocked(availableDock))
             {
                 availableDock.setDockState(DockState.Occupied);
-                notifyDocking();
+                NotifyDocking();
                 Console.WriteLine($"Truck {Id} has been docked at dock {availableDock.DockID}");
             }
             
             // returns the dockID of the docking station that the truck has docked
         }        
 
-        private void moveTruckVertically(int row)
+        private void MoveTruckVertically(int row)
         {
-            if (row > positionX)
+            if (row > PositionX)
             {
-                while (row > positionX)
+                while (row > PositionX)
                 {
-                    positionX += 1;
-                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    PositionX += 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {PositionX} Y: {PositionY}");
                     Thread.Sleep(500);                    
                 }
             }
             else
             {
-                while (positionX > row)
+                while (PositionX > row)
                 {
-                    positionX -= 1;
-                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    PositionX -= 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {PositionX} Y: {PositionY}");
                     Thread.Sleep(500);
                 }
             }
         }
 
-        private void moveTruckHorizontally(int column)
+        private void MoveTruckHorizontally(int column)
         {
-            if (column > positionY)
+            if (column > PositionY)
             {
-                while (column > positionY)
+                while (column > PositionY)
                 {
-                    positionY += 1;
-                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    PositionY += 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {PositionX} Y: {PositionY}");
                     Thread.Sleep(500);
                 }
             }
             else
             {
-                while (positionY > column)
+                while (PositionY > column)
                 {
-                    positionY -= 1;
-                    Console.WriteLine($"Truck {Id} is now at position X: {positionX} Y: {positionY}");
+                    PositionY -= 1;
+                    Console.WriteLine($"Truck {Id} is now at position X: {PositionX} Y: {PositionY}");
                     Thread.Sleep(500);
                 }
             }
         }
 
-        private void reserveDock(Dock dockToReserve)
+        public void ReserveDock(Dock dockToReserve)
         {
             dockToReserve.setDockState(DockState.Reserved);
         }
 
-        private bool isDocked(Dock availableDock)
+        public bool IsDocked(Dock availableDock)
         {
             // if the truck position == available dock
-            return (positionX == availableDock.positionX && positionY == availableDock.positionY);            
+            return (PositionX == availableDock.positionX && PositionY == availableDock.positionY);            
         }
         
 
-        private void notifyArrival()
+        public void NotifyArrival()
         {
             // let the computer know that truck has arrived           
-            truckState = TruckState.Arrived;
-            Console.WriteLine($"Truck {Id} has arrived and is currently at X: {positionX} Y: {positionY}");
+            TruckState = TruckState.Arrived;
+            Console.WriteLine($"Truck {Id} has arrived and is currently at X: {PositionX} Y: {PositionY}");
 
         }
 
         // notifies computer that truck is docked and ready to be
         // loaded / unloaded
-        private void notifyDocking()
+        public void NotifyDocking()
         {
             // let the computer know that truck has arrived           
-            truckState = TruckState.Docked;
-            assignedWarehouse.addTruck(this);
+            TruckState = TruckState.Docked;
+            AssignedWarehouse.addTruck(this);
         }
 
-        private void notifyDeparture(bool isTruckTaskDone)
+        private void NotifyDeparture(bool isTruckTaskDone)
         {
             // if some task for this truck is done
             // notify the central computer of its departure
 
             if (isTruckTaskDone)
             {
-                this.truckState = TruckState.Departed;
+                this.TruckState = TruckState.Departed;
             }
         }        
 
-        public TruckState getTruckState()
+        public TruckState GetTruckState()
         {
-            return truckState;
+            return TruckState;
         }
 
-        public int getCurrentWeight()
+        public int GetCurrentWeight()
         {
             return currentWeight;
         }
 
-        public int getCurrentvolume()
+        public int GetCurrentvolume()
         {
             return currentVolume;
         }

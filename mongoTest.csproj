@@ -37,7 +37,7 @@
     <None Remove="Components\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.14.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.14.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Home\css\" />
