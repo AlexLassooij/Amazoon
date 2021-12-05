@@ -21,23 +21,20 @@ namespace mongoTest.Controllers
             this.configuration = configuration;
         }
 
-        [HttpGet]
-        public IActionResult Home(
-            [FromQuery] int rows,
-            [FromQuery] int cols)
+        public IActionResult StartPage()
         {
             return View();
-
+        }
+       
             //var data = connection.Query<SqlTest>("select * from Robots ");
             //Console.WriteLine(data.ToList());
             //return Ok(rows + "\t" + cols + "\n" + data);
-            //return View();
-        }
+            //return View();        
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        //public IActionResult Privacy()
+        //{
+        //    return View();
+        //}
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

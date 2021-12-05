@@ -28,11 +28,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <header>
         <a href="~/"><img class="logo" src=@Url.Content("~/imgs/amazoon.png")></a>
-        <button class="selection">ALL Products</button>
-        <button class="selection">Grocery</button>
-        <button class="selection">Home</button>
-        <button class="selection">Gifts</button>
-        <button class="selection">Books</button>
+        <button class="selection" onclick="gotoOrderPage()">ALL Products</button>
+        <button class="selection" onclick="gotoOrderPage()">Grocery</button>
+        <button class="selection" onclick="gotoOrderPage()">Home</button>
+        <button class="selection" onclick="gotoOrderPage()">Gifts</button>
+        <button class="selection" onclick="gotoOrderPage()">Books</button>
+
+        <script>function gotoOrderPage() {
+                window.location.href = "Order/Select";
+            }</script>
     </header>
     <div id="bodyDiv">
 

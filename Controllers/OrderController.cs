@@ -19,7 +19,8 @@ namespace mongoTest.Controllers
         {
             return View();
         }
-        public IActionResult Index()
+
+        public IActionResult Select()
         {            
             List<Item> itemsFromDB = _items.Find(Item => true).ToList();
 

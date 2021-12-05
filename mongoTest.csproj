@@ -45,7 +45,7 @@
     <Folder Include="Components\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Views\Home\Index.cshtml" />
+    <None Include="Views\Home\thefuck.cshtml" />
     <None Include="wwwroot\css\home.css" />
     <None Include="wwwroot\fonts\Ember\.DS_Store" />
     <None Include="wwwroot\fonts\Ember\Amazon-Ember-Medium.ttf" />

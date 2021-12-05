@@ -48,14 +48,14 @@ namespace mongoTest
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    "Order",
-                    "order/"
-                    );
+                //endpoints.MapControllerRoute(
+                //    name :"Order",
+                //    pattern: "{controller=Order}/{action=Select}"
+                //    );
 
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Order}/{action=Start}/{id?}");
+                    pattern: "{controller=Home}/{action=StartPage}");
             });
         }
     }
