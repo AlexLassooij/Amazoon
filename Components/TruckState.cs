@@ -7,5 +7,6 @@ namespace mongoTest.Components
         Departed,
         Docked,
         Loading,
+        Unloading,
     }
 }
