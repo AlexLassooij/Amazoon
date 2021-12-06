@@ -15,7 +15,7 @@ namespace mongoTest.Components
         public DateTime TimeOfArrival { get; set; }
         public Warehouse AssignedWarehouse { get; set; }
         public TruckState TruckState { get; set; }
-        public List<Item> LoadedItems { get; set; }
+        public List<Item> LoadedItems = new List<Item>();
         public int PositionX {get; set;}
         public int PositionY {get; set;}
         private Dock Docks {get; set;}
@@ -180,12 +180,24 @@ namespace mongoTest.Components
 
         public int GetCurrentWeight()
         {
-            return currentWeight;
+            int weight = 0;
+            foreach (Item item in LoadedItems)
+            {
+                weight += item.weight;
+            }
+
+            return weight;
         }
 
         public int GetCurrentvolume()
         {
-            return currentVolume;
+            int volume = 0;
+            foreach (Item item in LoadedItems)
+            {
+                volume += item.volume;
+            }
+
+            return volume;
         }
 
         public int getAvailableWeight()

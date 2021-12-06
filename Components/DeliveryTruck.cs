@@ -35,7 +35,7 @@ namespace mongoTest.Components
 
         public void ReadyForLoading()
         {
-            Console.WriteLine($"Restock truck is carrying {GetCurrentvolume()}kg worth of products, and is ready for unloading.");
+            Console.WriteLine($"Delivery truck is ready for loading.");
             TruckState = TruckState.Loading;
 
         }

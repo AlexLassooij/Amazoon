@@ -48,7 +48,8 @@ namespace mongoTest.Components
         {
             this.currentWarehouse = currentWarehouse;
             truckSemaphore = new Semaphore(0, currentWarehouse.getNumDocks());
-            robotTasks = new Task[currentWarehouse.numRobots];            
+            robotTasks = new Task[currentWarehouse.numRobots];
+            currentWarehouse.SetComputer(this);
             RunWarehouse();
         }
 
@@ -215,7 +216,7 @@ namespace mongoTest.Components
         {
             DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
             currentWarehouse.AddDeliveryTruck(deliveryTruck);
-            Task.Run(() => new DeliveryTruck(currentWarehouse, 0, 8).RunTruck());
+            Task.Run(() => deliveryTruck.RunTruck());
         }
 
         private void CreateRestockingTruck(List<Item> restockItems)
@@ -227,7 +228,7 @@ namespace mongoTest.Components
             currentWarehouse.AddRestockTruck(restockTruck);
 
             
-            Task restockTruckTask = new Task(() => restockTruck.RunTruck());
+            Task.Run(() => restockTruck.RunTruck());
             
         }        
 

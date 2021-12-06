@@ -44,7 +44,7 @@ namespace mongoTest.Components
                     
             MoveTruckToDockingStation(truckDock);            
             ReadyForUnloading();
-            AssignedWarehouse.getComputer().CreateUnloadTask(LoadedItems, this);            
+            AssignedWarehouse.getComputer().CreateUnloadTask(new List<Item>(), this);            
 
             while (LoadedItems.Count > 0)
             {
@@ -67,7 +67,7 @@ namespace mongoTest.Components
 
         public void ReadyForUnloading()
         {
-            Console.WriteLine($"Restock truck is carrying {GetCurrentvolume()}kg worth of products, and is ready for unloading.");
+            Console.WriteLine($"Restock truck is carrying {GetCurrentWeight()}kg worth of products, and is ready for unloading.");
             TruckState = TruckState.Unloading;
 
         }

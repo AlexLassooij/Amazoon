@@ -28,9 +28,6 @@ namespace mongoTest.Components
         private List<DeliveryTruck> DeliveryTrucks = new List<DeliveryTruck>();
         private List<RestockTruck> RestockTrucks = new List<RestockTruck>();
 
-
-
-
         private int[] defaultRobotLocation = new int[2]{0, 0};
 
         public Warehouse(
@@ -49,7 +46,7 @@ namespace mongoTest.Components
             this.numRobots = numRobots;
             robots = new Robot[numRobots];
             docks = new Dock[numDocks];
-            this.centralComputer = new CentralComputer(this);
+            centralComputer = new CentralComputer(this);
         }
 
         public int getWarehouseRows()
@@ -103,6 +100,11 @@ namespace mongoTest.Components
         public int getID()
         {
             return ID;
+        }
+
+        public void SetComputer(CentralComputer computer)
+        {
+            this.centralComputer = computer;
         }
 
         public CentralComputer getComputer()
