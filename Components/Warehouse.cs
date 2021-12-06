@@ -25,7 +25,8 @@ namespace mongoTest.Components
         public int numRobots;
 
         // TRUCK stuff
-        private List<Truck> trucks = new List<Truck>();
+        private List<DeliveryTruck> DeliveryTrucks = new List<DeliveryTruck>();
+        private List<RestockTruck> RestockTrucks = new List<RestockTruck>();
 
 
 
@@ -79,14 +80,24 @@ namespace mongoTest.Components
             return robots;
         }
     
-        public List<Truck> getTrucks()
+        public List<DeliveryTruck> GetDeliveryTrucks()
         {
-            return trucks;
+            return DeliveryTrucks;
         }
 
-        public void addTruck(Truck truck)
+        public void AddDeliveryTruck(DeliveryTruck truck)
         {
-            trucks.Add(truck);
+            DeliveryTrucks.Add(truck);
+        }
+
+        public List<RestockTruck> GetRestockTrucks()
+        {
+            return RestockTrucks;
+        }
+
+        public void AddRestockTruck(RestockTruck truck)
+        {
+            RestockTrucks.Add(truck);
         }
 
         public int getID()

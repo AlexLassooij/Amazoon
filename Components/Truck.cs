@@ -159,12 +159,8 @@ namespace mongoTest.Components
 
         // notifies computer that truck is docked and ready to be
         // loaded / unloaded
-        public void NotifyDocking()
-        {
-            // let the computer know that truck has arrived           
-            TruckState = TruckState.Docked;
-            AssignedWarehouse.addTruck(this);
-        }
+        public abstract void NotifyDocking();
+        
 
         private void NotifyDeparture(bool isTruckTaskDone)
         {

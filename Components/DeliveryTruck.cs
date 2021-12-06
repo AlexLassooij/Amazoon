@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Threading;
 
 namespace mongoTest.Components
 {
@@ -13,6 +13,31 @@ namespace mongoTest.Components
         public void RunTruck()
         {
             NotifyArrival();
+            Dock truckDock;
+            while ((truckDock = FindAvailableDock()) == null)
+            {
+                Console.WriteLine($"Truck {Id} waiting for available dock");
+                Thread.Sleep(500);
+            }
+
+            MoveTruckToDockingStation(truckDock);            
+            ReadyForLoading();            
+        }
+
+        override
+        public void NotifyDocking()
+        {
+            // let the computer know that truck has arrived           
+            TruckState = TruckState.Docked;
+            AssignedWarehouse.AddDeliveryTruck(this);
+            Thread.Sleep(500);
+        }
+
+        public void ReadyForLoading()
+        {
+            Console.WriteLine($"Restock truck is carrying {GetCurrentvolume()}kg worth of products, and is ready for unloading.");
+            TruckState = TruckState.Loading;
+
         }
     }    
 }

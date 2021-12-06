@@ -42,12 +42,9 @@ namespace mongoTest.Components
                 Thread.Sleep(500);
             }
                     
-            MoveTruckToDockingStation(truckDock);
-            if (IsDocked(truckDock))
-            {
-                ReadyForUnloading();
-                AssignedWarehouse.getComputer().CreateUnloadTask(LoadedItems, this);
-            }
+            MoveTruckToDockingStation(truckDock);            
+            ReadyForUnloading();
+            AssignedWarehouse.getComputer().CreateUnloadTask(LoadedItems, this);            
 
             while (LoadedItems.Count > 0)
             {
@@ -59,17 +56,28 @@ namespace mongoTest.Components
 
         }
 
+        override
+        public void NotifyDocking()
+        {
+            // let the computer know that truck has arrived           
+            TruckState = TruckState.Docked;
+            AssignedWarehouse.AddRestockTruck(this);
+            Thread.Sleep(500);
+        }
+
         public void ReadyForUnloading()
         {
             Console.WriteLine($"Restock truck is carrying {GetCurrentvolume()}kg worth of products, and is ready for unloading.");
             TruckState = TruckState.Unloading;
-            
-        }       
+
+        }
 
         private void GetRestockTruckLocation()
         {
             Console.WriteLine($"Restock truck at X: {PositionX} Y: {PositionY}");
         }
-       
+
+        
+
     }
 }
