@@ -18,7 +18,7 @@ namespace mongoTest.Components
         public List<Item> LoadedItems = new List<Item>();
         public int PositionX {get; set;}
         public int PositionY {get; set;}
-        private Dock Docks {get; set;}
+        private Dock Dock {get; set;}
 
         private int[] truckCapacity = new int[2]; // truckCapacity[0] = max carrying weight capacity
                                                   // truckCapacity[1] = max carrying volume capacity 
@@ -140,6 +140,7 @@ namespace mongoTest.Components
         public void ReserveDock(Dock dockToReserve)
         {
             dockToReserve.setDockState(DockState.Reserved);
+            Dock = dockToReserve;
         }
 
         public bool IsDocked(Dock availableDock)
@@ -218,6 +219,11 @@ namespace mongoTest.Components
         public void addVolume(int volume)
         {
             currentVolume += volume;
+        }
+
+        public Dock GetDock()
+        {
+            return Dock;
         }
     }
 

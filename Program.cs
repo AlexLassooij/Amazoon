@@ -22,7 +22,7 @@ namespace mongoTest
             // brew services start mongodb/brew/mongodb-community
             // mongosh
             initializeDB();
-            initializeWarehouses();
+            InitializeWarehouses();
             CreateHostBuilder(args).Build().Run();
             //IMongoCollection<BsonDocument> _items = ConnectionHelper.getItemCollection();
             //var newItem = new BsonDocument
@@ -53,7 +53,6 @@ namespace mongoTest
             IMongoCollection<BsonDocument> _bson = ConnectionHelper.getBsonCollection();
             IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
             IMongoCollection<Order> _orders = ConnectionHelper.getOrderCollection();
-
             _items.DeleteMany(Item => true);
             _orders.DeleteMany(Order => true);
 
@@ -92,7 +91,7 @@ namespace mongoTest
             }
         }
 
-        public static void initializeWarehouses()
+        public static void InitializeWarehouses()
         {
             Task t = Task.Run(() => new Warehouse(1, 4, 4, 3, 2, 2));
         }

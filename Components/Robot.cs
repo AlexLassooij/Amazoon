@@ -21,12 +21,14 @@ namespace mongoTest.Components
         private List<Item> itemsInPossession;
         private String Id = Guid.NewGuid().ToString();
         private Mutex queueMutex;
+        private int DesignatedAisle;
 
-        public Robot(CentralComputer computer, Mutex queueMutex)
+        public Robot(CentralComputer computer, Mutex queueMutex, int DesignatedAisle)
         {
             this.batteryLevel = MAX_CHARGE;
             this.queueMutex = queueMutex;
             this.computer = computer;
+            this.DesignatedAisle = DesignatedAisle;
             
         }        
 
@@ -88,8 +90,14 @@ namespace mongoTest.Components
             return this.positionY;
         }
 
+        private int GetCurrentColumn() 
+        {
+            return this.DesignatedAisle;
+
+        }
+
         private void ChargeBattery() {
-            MoveToLocation(0, computer.GetWarehouse().getWarehouseRows(), "right");
+            MoveToLocation(0, computer.GetWarehouse().getWarehouseRows());
             Thread.Sleep(ROBOT_CHARGING_TIME);
         }
         
@@ -101,6 +109,7 @@ namespace mongoTest.Components
                 {
                     // moveToLocation is not fully implemented
                     MoveToLocation(location.row, location.column, location.orientation);
+                    break;
                 }
             }
             // move robot to correct column first
@@ -126,9 +135,32 @@ namespace mongoTest.Components
             }
         }
 
+        // overloaded method for movign to either charging station or truck, because
+        // orientation does not matter
+        private void MoveToLocation(int row, int column)
+        {
+            if (column != GetRobotColumn())
+            {
+                // if the next item is in the top half of warehouse, move to top,
+                // else move to bottom
+                if (row < this.computer.GetWarehouse().getWarehouseRows() / 2)
+                {
+                    moveRobotVertically(0);
+                }
+                else
+                {
+                    moveRobotVertically(computer.GetWarehouse().getWarehouseRows() - 1);
+                }
+
+                moveRobotHorizontally(column);
+                moveRobotVertically(row);
+            }
+        }
+
         public void LoadItemsIntoTruck(Truck truck)
         {
 
+            MoveToLocation(truck.GetDock().positionX, truck.GetDock().positionY);
         }
      
 

@@ -122,7 +122,7 @@ namespace mongoTest.Components
             PerformInitialRestock();
             InitRobots();
             InitDocks();
-            CreateDeliveryTruck();
+            CreateShippingTruck();
             // this will make sure the truck is docked at an open dock
             //var isTruckDocked = Task<bool>.Run(() =>
             //{
@@ -212,11 +212,11 @@ namespace mongoTest.Components
             }
         }
 
-        public void CreateDeliveryTruck()
+        public void CreateShippingTruck()
         {
-            DeliveryTruck deliveryTruck = new DeliveryTruck(currentWarehouse, 0, 8);
-            currentWarehouse.AddDeliveryTruck(deliveryTruck);
-            Task.Run(() => deliveryTruck.RunTruck());
+            ShippingTruck ShippingTruck = new ShippingTruck(currentWarehouse, 0, 8);
+            currentWarehouse.AddShippingTruck(ShippingTruck);
+            Task.Run(() => ShippingTruck.RunTruck());
         }
 
         private void CreateRestockingTruck(List<Item> restockItems)
@@ -233,8 +233,8 @@ namespace mongoTest.Components
         }        
 
         private void InitRobots() {
-            for (int i = 0; i < currentWarehouse.numRobots; i++) {
-                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex);
+            for (int i = 0; i <= currentWarehouse.getWarehouseColumns(); i++) {
+                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex, i);
                 Robot newRobot = currentWarehouse.getRobots()[i];
                 Task t = Task.Run(() => newRobot.RunRobot());
                 // robotTasks[i] = t;
@@ -251,7 +251,7 @@ namespace mongoTest.Components
         }
 
         
-       
+       //restocking
         public void CreateUnloadTask(List<Item> restockingOrder, Truck restockTruck)
         {
             QueueRobotTasks("unload", restockingOrder, restockTruck);
@@ -275,23 +275,23 @@ namespace mongoTest.Components
                 // been schedules for loading yet
                 if (itemsInWarehouse.Count > 0)
                 {
-                    DeliveryTruck deliveryTruck = GetDeliveryTruck(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
+                    ShippingTruck ShippingTruck = GetShippingTruck(getTotalItemWeight(itemsInWarehouse), getTotalItemVolume(itemsInWarehouse));
                     // only schedules a task if there is a truck available to pick
                     // up the items 
-                    if (deliveryTruck != null)
+                    if (ShippingTruck != null)
                     {
-                        deliveryTruck.addWeight(getTotalItemWeight(itemsInWarehouse));
-                        deliveryTruck.addVolume(getTotalItemVolume(itemsInWarehouse));
-                        CreateLoadTask(itemsInWarehouse, deliveryTruck);
+                        ShippingTruck.addWeight(getTotalItemWeight(itemsInWarehouse));
+                        ShippingTruck.addVolume(getTotalItemVolume(itemsInWarehouse));
+                        CreateLoadTask(itemsInWarehouse, ShippingTruck);
                     }
                 }
             }
         }
 
         // updates the database to reflect that items are going to be picked up
-        // for delivery
+        // for Shipping
         // adds a task to the queue to have robots load the items
-        private void CreateLoadTask(List<Item> itemsInWarehouse, Truck deliveryTruck)
+        private void CreateLoadTask(List<Item> itemsInWarehouse, Truck ShippingTruck)
         {
             // list of items in this order that are present in current warehouse
             FilterDefinition<Item> filter = new BsonDocument
@@ -308,7 +308,7 @@ namespace mongoTest.Components
                 item.itemState = ItemState.Loading;                
             }
 
-            QueueRobotTasks("load", itemsInWarehouse, deliveryTruck);            
+            QueueRobotTasks("load", itemsInWarehouse, ShippingTruck);            
         }
 
         private List<Item> GetItemsInWarehouse(Order order)
@@ -329,6 +329,7 @@ namespace mongoTest.Components
         // queues robot tasks for a particular Order
         // this will happen after a new order comes in and there is a truck
         // available to ship this order
+        // 
         private void QueueRobotTasks(string taskType, List<Item> items, Truck truck)
         {
             List<Item> itemsList = new List<Item>();
@@ -385,6 +386,9 @@ namespace mongoTest.Components
 
         // adds items on an incoming restock truck to the warehouse's inventory and pre designates a location for them
         // updates the database as well
+        // items will be added to inventory but will have "Incoming" status
+        // when robots restock items from truck, all the would need to do is
+        // change status to available
         private void UpdateInventory(List<Item> restockItems)
         {
             foreach (Item item in restockItems)
@@ -467,9 +471,9 @@ namespace mongoTest.Components
         
 
         // will be called before enqueueing a new robot tasks
-        public DeliveryTruck GetDeliveryTruck(int orderWeight, int orderVolume)
+        public ShippingTruck GetShippingTruck(int orderWeight, int orderVolume)
         {
-            foreach (DeliveryTruck truck in currentWarehouse.GetDeliveryTrucks())
+            foreach (ShippingTruck truck in currentWarehouse.GetShippingTrucks())
             {
                 if (truck.GetTruckState() == TruckState.Loading)
                 {

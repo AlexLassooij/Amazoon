@@ -14,8 +14,7 @@ namespace mongoTest.Components
         private int numColumns; 
         private int shelfHeight;
         private int ID;
-        public static int MAX_SHELF_WEIGHT = 1000;
-        
+        public static int MAX_SHELF_WEIGHT = 1000;    
         // DOCKING STATION STUFF
         private int numDocks { get; set; } // set the number of docking stations that will be used to initialize the docking stations in the warehouse
         private Dock[] docks; // array of docking stations to easily access each. dependent on the number of docking stations defined above
@@ -25,9 +24,8 @@ namespace mongoTest.Components
         public int numRobots;
 
         // TRUCK stuff
-        private List<DeliveryTruck> DeliveryTrucks = new List<DeliveryTruck>();
+        private List<ShippingTruck> ShippingTrucks = new List<ShippingTruck>();
         private List<RestockTruck> RestockTrucks = new List<RestockTruck>();
-
         private int[] defaultRobotLocation = new int[2]{0, 0};
 
         public Warehouse(
@@ -77,14 +75,14 @@ namespace mongoTest.Components
             return robots;
         }
     
-        public List<DeliveryTruck> GetDeliveryTrucks()
+        public List<ShippingTruck> GetShippingTrucks()
         {
-            return DeliveryTrucks;
+            return ShippingTrucks;
         }
 
-        public void AddDeliveryTruck(DeliveryTruck truck)
+        public void AddShippingTruck(ShippingTruck truck)
         {
-            DeliveryTrucks.Add(truck);
+            ShippingTrucks.Add(truck);
         }
 
         public List<RestockTruck> GetRestockTrucks()

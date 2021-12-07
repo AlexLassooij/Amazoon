@@ -3,9 +3,9 @@ using System.Threading;
 
 namespace mongoTest.Components
 {
-    public class DeliveryTruck : Truck
+    public class ShippingTruck : Truck
     {
-        public DeliveryTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY) :
+        public ShippingTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY) :
             base(assignedWarehouse, initPositionX, initPositionY)
         { }
 
@@ -29,13 +29,13 @@ namespace mongoTest.Components
         {
             // let the computer know that truck has arrived           
             TruckState = TruckState.Docked;
-            AssignedWarehouse.AddDeliveryTruck(this);
+            AssignedWarehouse.AddShippingTruck(this);
             Thread.Sleep(500);
         }
 
         public void ReadyForLoading()
         {
-            Console.WriteLine($"Delivery truck is ready for loading.");
+            Console.WriteLine($"Shipping truck is ready for loading.");
             TruckState = TruckState.Loading;
 
         }

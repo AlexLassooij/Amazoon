@@ -44,7 +44,7 @@ namespace mongoTest.Components
                     
             MoveTruckToDockingStation(truckDock);            
             ReadyForUnloading();
-            AssignedWarehouse.getComputer().CreateUnloadTask(new List<Item>(), this);            
+            AssignedWarehouse.getComputer().CreateUnloadTask(LoadedItems, this);            
 
             while (LoadedItems.Count > 0)
             {
@@ -75,8 +75,7 @@ namespace mongoTest.Components
         private void GetRestockTruckLocation()
         {
             Console.WriteLine($"Restock truck at X: {PositionX} Y: {PositionY}");
-        }
-
+        }        
         
 
     }
