@@ -14,7 +14,7 @@ namespace mongoTest.Components
         public RobotTask(string taskType, List<Item> items, Truck assignedTruck)
         {
             this.taskType = taskType;
-            this.items = items;
+            this.items = new List<Item>(items);
             this.assignedTruck = assignedTruck;
         }
 

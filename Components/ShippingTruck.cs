@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using mongoTest.Models;
 
 namespace mongoTest.Components
 {
@@ -29,8 +30,32 @@ namespace mongoTest.Components
         {
             // let the computer know that truck has arrived           
             TruckState = TruckState.Docked;
-            AssignedWarehouse.AddShippingTruck(this);
             Thread.Sleep(500);
+        }
+
+        override
+        public void LeaveDock() {
+            foreach (Item item in LoadedItems) {
+                AssignedWarehouse.getComputer().inventory.Remove(item);
+                foreach (ItemLocation location in AssignedWarehouse.getComputer().inventoryLocations) {
+                    if (location.items.Contains(item.Id)) {
+                        location.items.Remove(item.Id);
+                    }
+                }
+                
+            }
+            AssignedWarehouse.GetShippingTrucks().Remove(this);
+            TruckState = TruckState.Departed;
+            Dock.setDockState(DockState.Available);
+            System.Console.WriteLine($"Shipping truck {Id} has left the warehouse");
+        }
+
+        override
+        public void NotifyArrival()
+        {
+            // let the computer know that truck has arrived           
+            TruckState = TruckState.Arrived;
+            Console.WriteLine($"Shipping truck {Id} has arrived and is currently at X: {PositionX} Y: {PositionY}");
         }
 
         public void ReadyForLoading()

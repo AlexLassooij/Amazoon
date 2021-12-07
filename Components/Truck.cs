@@ -18,12 +18,7 @@ namespace mongoTest.Components
         public List<Item> LoadedItems = new List<Item>();
         public int PositionX {get; set;}
         public int PositionY {get; set;}
-        private Dock Dock {get; set;}
-
-        private int[] truckCapacity = new int[2]; // truckCapacity[0] = max carrying weight capacity
-                                                  // truckCapacity[1] = max carrying volume capacity 
-        private int[] truckCurrentCapacity = new int[2]; // truckCurrentCapacity[0] = current weight the truck is carrying
-                                                         // truckCurrentCapacity[1] = current volume the truck is carrying
+        public Dock Dock {get; set;}
 
         // Default constructor for adding truck to warehouse
         public Truck(Warehouse AssignedWarehouse, int InitPositionX, int InitPositionY)
@@ -48,12 +43,7 @@ namespace mongoTest.Components
         public abstract void RunTruck();
 
 
-        public void ReadyToLeave(Dock truckDock)
-        {
-            Console.WriteLine($"Restock truck is empty and is leaving.");
-            TruckState = TruckState.Departed;
-            truckDock.setDockState(DockState.Available);
-        }
+        
 
         public Dock FindAvailableDock()
         {
@@ -72,6 +62,7 @@ namespace mongoTest.Components
             }
             return null;
         }
+    
 
         public void MoveTruckToDockingStation(Dock availableDock)
         {
@@ -148,21 +139,17 @@ namespace mongoTest.Components
             // if the truck position == available dock
             return (PositionX == availableDock.positionX && PositionY == availableDock.positionY);            
         }
-        
 
-        public void NotifyArrival()
-        {
-            // let the computer know that truck has arrived           
-            TruckState = TruckState.Arrived;
-            Console.WriteLine($"Truck {Id} has arrived and is currently at X: {PositionX} Y: {PositionY}");
 
-        }
+        public abstract void NotifyArrival();
 
         // notifies computer that truck is docked and ready to be
         // loaded / unloaded
         public abstract void NotifyDocking();
         
-
+        //shipping truck list and restock truck list
+        public abstract void LeaveDock(); 
+        
         private void NotifyDeparture(bool isTruckTaskDone)
         {
             // if some task for this truck is done
@@ -174,6 +161,9 @@ namespace mongoTest.Components
             }
         }        
 
+        public List<Item> GetItemsInTruck() {
+            return LoadedItems;
+        }
         public TruckState GetTruckState()
         {
             return TruckState;

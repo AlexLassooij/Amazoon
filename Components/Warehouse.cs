@@ -7,13 +7,13 @@ namespace mongoTest.Components
     public class Warehouse
     {
 
-        private CentralComputer centralComputer { get; set; }          
-        
+        private CentralComputer centralComputer { get; set; }
+
         // WAREHOUSE STUFF
-        private int numRows;
-        private int numColumns; 
-        private int shelfHeight;
-        private int ID;
+        public int numRows;
+        public int numColumns;
+        public int shelfHeight;
+        public int ID;
         public static int MAX_SHELF_WEIGHT = 1000;    
         // DOCKING STATION STUFF
         private int numDocks { get; set; } // set the number of docking stations that will be used to initialize the docking stations in the warehouse
@@ -21,7 +21,6 @@ namespace mongoTest.Components
         
         // ROBOT STUFF
         private Robot[] robots;
-        public int numRobots;
 
         // TRUCK stuff
         private List<ShippingTruck> ShippingTrucks = new List<ShippingTruck>();
@@ -33,16 +32,16 @@ namespace mongoTest.Components
             int numRows, 
             int numColumns,
             int shelfHeight,
-            int numDocks,
-            int numRobots)
+            int numDocks
+            )
         {
             this.ID = ID;
             this.numRows = numRows;
             this.numColumns = numColumns;
             this.shelfHeight = shelfHeight;
             this.numDocks = numDocks;
-            this.numRobots = numRobots;
-            robots = new Robot[numRobots];
+            // want the amount of robots to be same as number of columns
+            robots = new Robot[numColumns];
             docks = new Dock[numDocks];
             centralComputer = new CentralComputer(this);
         }

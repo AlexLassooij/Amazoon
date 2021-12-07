@@ -10,9 +10,8 @@ namespace mongoTest.Components
         public RestockTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY, List<Item> restockItems) :
             base(assignedWarehouse, initPositionX, initPositionY)
         {
-            LoadedItems = restockItems;
+            LoadedItems = new List<Item>(restockItems);
         }
-
 
         // after this block is executed, we have whether the truck has 
         // successfully done the following things:
@@ -34,26 +33,24 @@ namespace mongoTest.Components
         override
         public void RunTruck()
         {
-            NotifyArrival();
-            Dock truckDock;
-            while ((truckDock = FindAvailableDock()) == null)
+            NotifyArrival();            
+            while ((this.Dock = FindAvailableDock()) == null)
             {
                 Console.WriteLine($"Truck {Id} waiting for available dock");
                 Thread.Sleep(500);
             }
                     
-            MoveTruckToDockingStation(truckDock);            
+            MoveTruckToDockingStation(this.Dock);            
             ReadyForUnloading();
             AssignedWarehouse.getComputer().CreateUnloadTask(LoadedItems, this);            
 
             while (LoadedItems.Count > 0)
             {
-                Console.WriteLine($"Truck {Id} is being unloaded");
+                Console.WriteLine($"Truck {Id} is being unloaded\n " +
+                $"{LoadedItems.Count} more items are still in truck");
                 Thread.Sleep(1000);
             }
-
-            ReadyToLeave(truckDock);
-
+            LeaveDock();
         }
 
         override
@@ -61,22 +58,35 @@ namespace mongoTest.Components
         {
             // let the computer know that truck has arrived           
             TruckState = TruckState.Docked;
-            AssignedWarehouse.AddRestockTruck(this);
             Thread.Sleep(500);
         }
+
+        override
+        public void LeaveDock() {
+            AssignedWarehouse.GetRestockTrucks().Remove(this);
+            TruckState = TruckState.Departed;
+            Dock.setDockState(DockState.Available);
+            System.Console.WriteLine($"Restock truck {Id} has left the warehouse");
+        }
+
+        override
+        public void NotifyArrival()       
+        {
+            // let the computer know that truck has arrived           
+            TruckState = TruckState.Arrived;
+            Console.WriteLine($"Restock truck {Id} has arrived and is currently at X: {PositionX} Y: {PositionY}");
+        }
+        
 
         public void ReadyForUnloading()
         {
             Console.WriteLine($"Restock truck is carrying {GetCurrentWeight()}kg worth of products, and is ready for unloading.");
             TruckState = TruckState.Unloading;
-
         }
 
         private void GetRestockTruckLocation()
         {
             Console.WriteLine($"Restock truck at X: {PositionX} Y: {PositionY}");
         }        
-        
-
     }
 }

@@ -93,7 +93,7 @@ namespace mongoTest
 
         public static void InitializeWarehouses()
         {
-            Task t = Task.Run(() => new Warehouse(1, 4, 4, 3, 2, 2));
+            Task t = Task.Run(() => new Warehouse(1, 4, 4, 3, 2));
         }
     }
 }

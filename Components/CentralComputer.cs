@@ -13,27 +13,19 @@ namespace mongoTest.Components
         public static int DEFAULT_RESTOCK_AMOUNT = 10;
         public static int MIN_AMOUNT_NEEDED = 5;
         private Warehouse currentWarehouse;
-        private List<Item> inventory = new List<Item>();
-        private List<ItemLocation> inventoryLocations = new List<ItemLocation>();
+        public List<Item> inventory = new List<Item>();
+        public List<ItemLocation> inventoryLocations = new List<ItemLocation>();
         private List<Item> restockItems = new List<Item>();
-
         // queue should probably be moved to warehouse
         private Queue<RobotTask> robotTaskQueue = new Queue<RobotTask>();
         private Queue<Order> orderQueue;
-        
-
         private Mutex robotQueueMutex = new Mutex();
+        private Mutex robotTruckeMutex = new Mutex();
         public Mutex dockMutex = new Mutex();
         private Semaphore truckSemaphore;
         private Task[] robotTasks;
         private IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
         private IMongoCollection<Order> _orders = ConnectionHelper.getOrderCollection();
-
-
-
-       
-
-
 
         // TODO :
         // Truck communication with CC
@@ -48,7 +40,7 @@ namespace mongoTest.Components
         {
             this.currentWarehouse = currentWarehouse;
             truckSemaphore = new Semaphore(0, currentWarehouse.getNumDocks());
-            robotTasks = new Task[currentWarehouse.numRobots];
+            robotTasks = new Task[currentWarehouse.numColumns];
             currentWarehouse.SetComputer(this);
             RunWarehouse();
         }
@@ -119,6 +111,7 @@ namespace mongoTest.Components
         // central function of the computer, will always run
         public void RunWarehouse()
         {
+            Thread.Sleep(5000);
             PerformInitialRestock();
             InitRobots();
             InitDocks();
@@ -136,7 +129,7 @@ namespace mongoTest.Components
                 pollForNewOrders();
                 CheckLowStockItems();
 
-                Console.WriteLine("Central computer running");
+                // Console.WriteLine("Central computer running");
                 Thread.Sleep(1000);
            }
         }
@@ -233,8 +226,8 @@ namespace mongoTest.Components
         }        
 
         private void InitRobots() {
-            for (int i = 0; i <= currentWarehouse.getWarehouseColumns(); i++) {
-                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex, i);
+            for (int i = 0; i < currentWarehouse.getWarehouseColumns(); i++) {
+                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex, robotTruckeMutex, i + 1);
                 Robot newRobot = currentWarehouse.getRobots()[i];
                 Task t = Task.Run(() => newRobot.RunRobot());
                 // robotTasks[i] = t;
@@ -294,16 +287,16 @@ namespace mongoTest.Components
         private void CreateLoadTask(List<Item> itemsInWarehouse, Truck ShippingTruck)
         {
             // list of items in this order that are present in current warehouse
-            FilterDefinition<Item> filter = new BsonDocument
-                {
-                    { "warehouseID", currentWarehouse.getID() },
-                    { "itemState", ItemState.Purchased }
-                };
+            
 
             UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", ItemState.Loading);
 
             foreach (Item item in itemsInWarehouse)
-            {                
+            {
+                FilterDefinition<Item> filter = new BsonDocument
+                {
+                    { "Id", item.Id },
+                };
                 _items.FindOneAndUpdate(filter, update);
                 item.itemState = ItemState.Loading;                
             }
@@ -333,14 +326,13 @@ namespace mongoTest.Components
         private void QueueRobotTasks(string taskType, List<Item> items, Truck truck)
         {
             List<Item> itemsList = new List<Item>();
-
-            if (taskType == "load")
-            {
+            int i = 0;
                 foreach (Item item in items)
                 {
-                    if (getTotalItemWeight(itemsList) + item.weight < Robot.GetMaxWeight())
+                    if (getTotalItemWeight(itemsList) + item.weight < Robot.MAX_WEIGHT)
                     {
                         itemsList.Add(item);
+                    i++;
                     }
                     else
                     {
@@ -349,24 +341,10 @@ namespace mongoTest.Components
                         robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
                         robotQueueMutex.ReleaseMutex();
                         itemsList.Clear();
-                    }
-                }
-            }
-            else if (taskType == "unload")
-            {
-                int itemTotalWeight = 0;
-                foreach (Item item in items)
-                {
-                    while (itemTotalWeight < Robot.GetMaxWeight())
-                    {
                         itemsList.Add(item);
-                        itemTotalWeight += item.weight;
+                        
                     }
-                    robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
-                    itemsList.Clear();
-                }
-            }
-
+                }                       
             robotTaskQueue.Enqueue(new RobotTask(taskType, itemsList, truck));
         }
 
@@ -480,6 +458,8 @@ namespace mongoTest.Components
                     if (orderWeight <= truck.getAvailableWeight() && orderVolume <= truck.getAvailableVolume())
                     {
                         return truck;
+                    } else {
+                        truck.LeaveDock();
                     }
                 }
             }
@@ -506,11 +486,6 @@ namespace mongoTest.Components
         public Warehouse GetWarehouse()
         {
             return currentWarehouse;
-        }
-
-        public List<ItemLocation> GetInventoryLocations()
-        {
-            return inventoryLocations;
         }
 
         // have a polling method, checks for new orders every few seconds
