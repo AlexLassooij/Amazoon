@@ -1,0 +1,39 @@
+﻿<Properties StartupConfiguration="{5FCC2710-2E8E-4B23-8AFA-E614E6CD7C32}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Components/Robot.cs">
+    <Files>
+      <File FileName="Components/CentralComputer.cs" Line="114" Column="1" />
+      <File FileName="Components/Warehouse.cs" />
+      <File FileName="Components/Robot.cs" Line="60" Column="14" />
+      <File FileName="Components/RestockTruck.cs" Line="52" Column="14" />
+      <File FileName="Components/Truck.cs" Line="48" Column="10" />
+      <File FileName="Components/ShippingTruck.cs" Line="50" Column="38" />
+      <File FileName="Components/RobotTask.cs" Line="1" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="mongoTest" expanded="True">
+            <Node name="mongoTest" expanded="True">
+              <Node name="Components" expanded="True">
+                <Node name="Robot.cs" selected="True" />
+              </Node>
+              <Node name="Controllers" expanded="True" />
+              <Node name="Models" expanded="True" />
+              <Node name="Views" expanded="True">
+                <Node name="Home" expanded="True" />
+                <Node name="Order" expanded="True" />
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.mongoTest PreferredExecutionTarget="/Applications/Google Chrome.app" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

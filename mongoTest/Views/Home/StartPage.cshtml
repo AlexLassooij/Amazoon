@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Amazoon Home";
+}
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<!--html-->
+<!--head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href=@Url.Content("~/css/home.css")>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head--->
+<body onload="removeFooter()">
+    <link rel="stylesheet" href=@Url.Content("~/css/home.css")>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function removeFooter() {
+            $("footer").remove();
+        }
+    </script>
+    <!--[if lt IE 7]>
+        <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <header>
+        <a href="~/"><img class="logo" src=@Url.Content("~/imgs/amazoon.png")></a>
+        <button class="selection" onclick="gotoOrderPage()">ALL Products</button>
+        <button class="selection" onclick="gotoOrderPage()">Grocery</button>
+        <button class="selection" onclick="gotoOrderPage()">Home</button>
+        <button class="selection" onclick="gotoOrderPage()">Gifts</button>
+        <button class="selection" onclick="gotoOrderPage()">Books</button>
+
+        <script>
+            function gotoOrderPage() {
+                window.location.href = "Order/Select";
+            }</script>
+    </header>
+    <div id="bodyDiv">
+
+    </div>
+
+    <table>
+        <tr class="row">
+            <td class="data">
+                <h1 class="dataHeading">Popular Electronics</h1>
+                <div class="imgContainer">
+                    <img class="dataImg" src=@Url.Content("~/imgs/tv.png")>
+                </div>
+                <h3 class="dataName">55" Samsung TV</h3>
+                <p class="dataPrice">$1599.99</p>
+                <a>See more electronics</a>
+            </td>
+            <td class="data">
+                <h1 class="dataHeading">Gift Ideas For Them</h1>
+                <div class="imgContainer">
+                    <img class="dataImg" src=@Url.Content("~/imgs/teddy.png")>
+                </div>
+                <h3 class="dataName">Cool Teddy Bear</h3>
+                <p class="dataPrice">$39.99</p>
+                <a>See more gifts</a>
+            </td>
+            <td class="data">
+                <h1 class="dataHeading">Holiday Home Deals</h1>
+                <div class="imgContainer">
+                    <img class="dataImg" src=@Url.Content("~/imgs/instantpot.png")>
+                </div>
+                <h3 class="dataName">Instant Pot</h3>
+                <p class="dataPrice">$199.99</p>
+                <a>See more home products</a>
+            </td>
+        </tr>
+    </table>
+
+    <script src=@Url.Content("~/js/home.js") async defer></script>
+</body>
+<!--/html-->

@@ -1,0 +1,101 @@
+@font-face {
+    font-family: 'AmazonEmber';
+    src: url('../fonts/Ember/AmazonEmber_Bd.ttf') format('truetype'); /* Safari, Android, iOS */
+}
+
+body {
+    overflow-x:hidden;
+    background-color:#c6f4e0;
+    font-family: AmazonEmber;
+    -webkit-transition: background-color 500ms linear;
+    -ms-transition: background-color 500ms linear;
+    transition: background-color 500ms linear;
+}
+
+header {
+    background-color:black;
+    top : 0px;
+    position : absolute;
+    left : 0px;
+    width : 100vw;
+    display : flex;
+    align-items : center;
+    height : 12%;
+}
+
+table{
+    top : 50%;
+    width : 100vw;
+    position: absolute;
+    left : 0vw;
+}
+
+h1{
+    font-size: 20px;
+}
+
+#bodyDiv {
+    position : absolute;
+    top : 12%;
+    left : 0%;
+    min-height : 88%;
+    width : 100vw;
+    background-image:url("../imgs/backcard1.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.logo {
+    max-width: 10vw;
+    margin : 24px 10px 10px 10px;
+}
+
+.selection {
+    background-color : #FD8505;
+    font-weight: bold;
+    font-family : AmazonEmber;
+    margin-left:10px;
+    margin-right:10px;
+    border-radius : 7px;
+    border : none;
+    font-size: 15px;
+}
+
+.selection:hover {
+    box-shadow: 0 0 20px 5px white;
+}
+
+.quantityChange {
+    border-radius: 20px;
+}
+
+.row {
+    width: 100%;
+    left : 0vw;
+    position:absolute;
+    /*background-color:yellow;*/
+    text-align: center;
+}
+
+.data {
+    background-color:rgba(255, 255, 255, 0.568);
+    width : 25%;
+    display : inline-block;
+    margin-left:4% !important;
+    margin-right: 4% !important;
+    padding: 0% 2% 1% 2%;
+    padding-top:2%;
+    top : 0%;
+    border-radius: 20px;
+    position : relative;
+}
+
+.imgContainer {
+    width : 100%;
+    text-align : center;
+}
+
+.dataImg {
+    max-height : 30%;
+    max-width : 100%;
+}

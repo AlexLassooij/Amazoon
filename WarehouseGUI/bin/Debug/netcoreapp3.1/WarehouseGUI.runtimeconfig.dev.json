@@ -1,0 +1,9 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\nusai\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\nusai\\.nuget\\packages",
+      "H:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+    ]
+  }
+}
