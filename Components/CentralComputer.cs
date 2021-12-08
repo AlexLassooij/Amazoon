@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data.SqlClient;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -167,8 +167,10 @@ namespace mongoTest.Components
         public void DispatchRestockingTruck()
         {          
             Console.WriteLine($"Dispatching a restocking truck with total weight : {getTotalItemWeight(restockItems)} and volume : {getTotalItemVolume(restockItems)} and the following items: " + restockItems.ToString());
-            CreateRestockingTruck(restockItems);
             UpdateInventory(restockItems);
+            List<Item> SortedList = restockItems.OrderBy(item => getItemColumn(item)).ToList();
+            CreateRestockingTruck(SortedList);
+            
             restockItems.Clear();
         }
 
@@ -190,6 +192,20 @@ namespace mongoTest.Components
 
             Task.Run(() => restockTruck.RunTruck());
 
+        }
+
+        public int getItemColumn(Item item)
+        {
+            foreach (ItemLocation location in inventoryLocations)
+            {
+                if (location.items.Contains(item.Id))
+                {
+                    // moveToLocation is not fully implemented
+                    return location.column;
+                }
+            }
+
+            return 0;
         }
 
         private void InitRobots() {

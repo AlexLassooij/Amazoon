@@ -69,6 +69,7 @@ namespace mongoTest.Components
                     PickUpFromWarehouse(item);
                     currentWeight += item.weight;
                     itemsInPossession.Add(item);
+                    Console.WriteLine($"Robot {robotId} has picked up a {item.name}");
                 }
                 LoadItemsIntoTruck(task.getAssignedTruck());
 
@@ -198,18 +199,18 @@ namespace mongoTest.Components
                 // else move to bottom
                 if (row < this.computer.GetWarehouse().getWarehouseRows() / 2)
                 {
-                    moveRobotVertically(0);
+                    MoveRobotVertically(0);
                 } else
                 {
-                    moveRobotVertically(computer.GetWarehouse().getWarehouseRows() - 1);
+                    MoveRobotVertically(computer.GetWarehouse().getWarehouseRows() - 1);
                 }     
-                    moveRobotHorizontally(column);           
+                    MoveRobotHorizontally(column);           
             }
 
-            moveRobotVertically(row);
+            MoveRobotVertically(row);
         }        
 
-        private void moveRobotVertically(int row)
+        private void MoveRobotHorizontally(int row)
         {
             if (row > positionX)
             {
@@ -228,7 +229,7 @@ namespace mongoTest.Components
             }
         }
 
-        private void moveRobotHorizontally(int column)
+        private void MoveRobotVertically(int column)
         {
             if (column > positionY)
             {
