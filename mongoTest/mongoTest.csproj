@@ -63,6 +63,7 @@
     <Compile Include="Components\RestockTruck.cs" />
     <Compile Include="Components\Robot.cs" />
     <Compile Include="Components\RobotTask.cs" />
+    <Compile Include="Components\ShippingTruck.cs" />
     <Compile Include="Components\SqlTest.cs" />
     <Compile Include="Components\Truck.cs" />
     <Compile Include="Components\TruckState.cs" />

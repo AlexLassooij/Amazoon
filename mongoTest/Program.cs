@@ -29,7 +29,7 @@ namespace mongoTest
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new WarehouseGUI.Form1());
 
-            initializeWarehouses();
+            InitializeWarehouses();
             CreateHostBuilder(args).Build().Run();
             //IMongoCollection<BsonDocument> _items = ConnectionHelper.getItemCollection();
             //var newItem = new BsonDocument
@@ -114,8 +114,7 @@ namespace mongoTest
                 WarehouseGUI.WarehouseVars.numRows,
                 WarehouseGUI.WarehouseVars.numColumns,
                 WarehouseGUI.WarehouseVars.shelfHeight,
-                WarehouseGUI.WarehouseVars.numDocks,
-                WarehouseGUI.WarehouseVars.numRobots)
+                WarehouseGUI.WarehouseVars.numDocks)
             );
         }
     }

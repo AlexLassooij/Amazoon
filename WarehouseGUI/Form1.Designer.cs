@@ -30,9 +30,7 @@ namespace WarehouseGUI
         private void InitializeComponent()
         {
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.col = new System.Windows.Forms.TextBox();
-            this.robot = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.row = new System.Windows.Forms.TextBox();
@@ -52,16 +50,6 @@ namespace WarehouseGUI
             this.label1.TabIndex = 0;
             this.label1.Text = "Number of Cols:";
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(65, 238);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(350, 37);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Number of Initial Robots: ";
-            // 
             // col
             // 
             this.col.Location = new System.Drawing.Point(443, 81);
@@ -69,14 +57,6 @@ namespace WarehouseGUI
             this.col.Size = new System.Drawing.Size(100, 23);
             this.col.TabIndex = 2;
             this.col.Text = "4";
-            // 
-            // robot
-            // 
-            this.robot.Location = new System.Drawing.Point(443, 252);
-            this.robot.Name = "robot";
-            this.robot.Size = new System.Drawing.Size(100, 23);
-            this.robot.TabIndex = 3;
-            this.robot.Text = "2";
             // 
             // button1
             // 
@@ -157,9 +137,7 @@ namespace WarehouseGUI
             this.Controls.Add(this.row);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.robot);
             this.Controls.Add(this.col);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
@@ -171,9 +149,7 @@ namespace WarehouseGUI
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox col;
-        private System.Windows.Forms.TextBox robot;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox row;

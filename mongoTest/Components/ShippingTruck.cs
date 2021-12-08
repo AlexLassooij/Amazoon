@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using mongoTest.Models;
+using System.Windows.Forms;
 
 namespace mongoTest.Components
 {
@@ -18,6 +19,12 @@ namespace mongoTest.Components
             while ((truckDock = FindAvailableDock()) == null)
             {
                 Console.WriteLine($"Truck {Id} waiting for available dock");
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                {
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                        Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[PositionX] + (PositionY + 1).ToString(),
+                        $"Waiting for available dock", numericID);
+                });
                 Thread.Sleep(500);
             }
 
@@ -49,6 +56,12 @@ namespace mongoTest.Components
             Dock.setDockState(DockState.Available);
             TruckSemaphore.Release();
             Console.WriteLine($"Shipping truck {Id} has left the warehouse");
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                    Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[PositionX] + (PositionY + 1).ToString(),
+                    $"Shipping truck has left the warehouse", numericID);
+            });
         }
 
         override
@@ -57,11 +70,23 @@ namespace mongoTest.Components
             // let the computer know that truck has arrived           
             TruckState = TruckState.Arrived;
             Console.WriteLine($"Shipping truck {Id} has arrived and is currently at X: {PositionX} Y: {PositionY}");
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                    Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[PositionX] + (PositionY + 1).ToString(),
+                    $"Shipping truck has arrived and is currently at X: {PositionX} Y: {PositionY}", numericID);
+            });
         }
 
         public void ReadyForLoading()
         {
             Console.WriteLine($"Shipping truck is ready for loading.");
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                    Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[PositionX] + (PositionY + 1).ToString(),
+                    $"Shipping truck is ready for loading.", numericID);
+            });
             TruckState = TruckState.Loading;
 
         }

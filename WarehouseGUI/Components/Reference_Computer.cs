@@ -17,9 +17,9 @@ namespace WarehouseGUI.Components
             RobotPositionList.Add(robot);
         }
 
-        public static void MoveRobotWithID(int id, int changeX, int changeY)
+        public static void MoveRobotWithID(int id, int X, int Y)
         {
-            RobotPositionList[id-1].MoveRobot(changeX, changeY);
+            RobotPositionList[id].MoveRobot(X, Y);
         }
     }
 
@@ -31,18 +31,12 @@ namespace WarehouseGUI.Components
         public RobotPosition(Grid_Point pt, int id)
         {
             RobotGridPt = pt;
-            label = labelList[id - 1];
+            label = labelList[id];
         }
 
-        public void MoveRobot(int changeX, int changeY)
-        {
-            int currentX = RobotGridPt.X_Pos;
-            int currentY = RobotGridPt.Y_Pos;
-
-            int newX = currentX + changeX;
-            int newY = currentY + changeY;
-
-            RobotGridPt = Grid_Point.GetGridPoint(newX, newY);
+        public void MoveRobot(int X, int Y)
+        { 
+            RobotGridPt = Grid_Point.GetGridPoint(X, Y);
             label.Location = RobotGridPt.pictureBox.Location;
         }
     }
@@ -93,5 +87,10 @@ namespace WarehouseGUI.Components
             char key = Grid_Point_Dict.Keys.ToArray<char>()[X];
             return Grid_Point_Dict[key][Y];
         }
+
+        public string GetPointName()
+        {
+            return $"{X_Cood}{Y_Cood}";
+        } 
     }
 }

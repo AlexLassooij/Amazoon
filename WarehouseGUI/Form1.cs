@@ -25,7 +25,7 @@ namespace WarehouseGUI
                 WarehouseVars.numColumns = col.Text != "" ? int.Parse(col.Text) : 0;
                 WarehouseVars.shelfHeight = shelfheight.Text != "" ? int.Parse(shelfheight.Text) : 0;
                 WarehouseVars.numDocks = dock.Text != "" ? int.Parse(dock.Text) : 0;
-                WarehouseVars.numRobots = robot.Text != "" ? int.Parse(robot.Text) : 0;
+                WarehouseVars.numRobots = WarehouseVars.numColumns;
 
                 if(WarehouseVars.numRows <= 2)
                 {

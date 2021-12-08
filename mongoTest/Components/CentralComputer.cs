@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using mongoTest.Models;
+using System.Windows.Forms;
+
 namespace mongoTest.Components
 {
     public class CentralComputer
@@ -32,10 +34,10 @@ namespace mongoTest.Components
         // Truck communication with CC
         // finish up robots : continuous loop for robot activity
         // 
-        
+
         // Notes on webserver :
         // 
-        
+        public static bool orderPlaced = false;
 
         public CentralComputer(Warehouse currentWarehouse)
         {
@@ -85,8 +87,61 @@ namespace mongoTest.Components
                 PollForNewOrders();
                 CheckLowStockItems();
                 // Console.WriteLine("Central computer running");
+                if (orderPlaced)
+                {
+                    UpdateGuiOrderStatus();
+                }
+                updateGuiItemStock();
+
                 Thread.Sleep(1000);
            }
+        }
+
+        void updateGuiItemStock()
+        {
+            List<ItemView> items = GetAllItemsInWarehouse();
+            List<WarehouseGUI.Components.Item> itemList = new List<WarehouseGUI.Components.Item>();
+            foreach(ItemView item in items)
+            {
+                itemList.Add(new WarehouseGUI.Components.Item(item.name, item.amountAvailable));
+            }
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateInventory(itemList, MIN_AMOUNT_NEEDED);
+            });
+            Thread.Sleep(500);
+        }
+
+        void UpdateGuiOrderStatus()
+        {
+            Dictionary<string, int> itemAmountDict;
+            List<Order> orders = _orders.Find(order => true).ToList();
+            List<WarehouseGUI.Components.Order> orderMessagesList = new List<WarehouseGUI.Components.Order>();
+            foreach (Order order in orders)
+            {
+                itemAmountDict = new Dictionary<string, int>();
+                foreach(Item item in order.items)
+                {
+                    if (!itemAmountDict.ContainsKey(item.name))
+                    {
+                        itemAmountDict.Add(item.name, 1);
+                    }
+                    else
+                    {
+                        itemAmountDict[item.name]++;
+                    }
+                }
+                WarehouseGUI.Components.Order orderGui = new WarehouseGUI.Components.Order(itemAmountDict, order.orderState.ToString());
+                if(order.orderState != OrderState.Shipped)
+                    orderMessagesList.Add(orderGui);
+            }
+
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateOrderStatus(orderMessagesList);
+            });
+            orderMessagesList.Clear();
+            Thread.Sleep(500);
         }
 
         private void CheckLowStockItems()
@@ -210,15 +265,12 @@ namespace mongoTest.Components
 
         private void InitRobots() {
             for (int i = 0; i < currentWarehouse.getWarehouseColumns(); i++) {
-                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex, robotTruckeMutex, i + 1);
+                currentWarehouse.getRobots()[i] = new Robot(this, robotQueueMutex, robotTruckeMutex, i);
                 Robot newRobot = currentWarehouse.getRobots()[i];
 
                 WarehouseGUI.Components.Reference_Computer.AddRobotToList(
                     new WarehouseGUI.Components.RobotPosition(
-                        WarehouseGUI.Components.Grid_Point.GetGridPoint(
-                            newRobot.GetRobotRow(), newRobot.GetRobotColumn()
-                            ), i
-                        )
+                        WarehouseGUI.Components.Grid_Point.GetGridPoint(0, 0), i)
                     );
 
                 Task t = Task.Run(() => newRobot.RunRobot());
@@ -231,7 +283,8 @@ namespace mongoTest.Components
             // position Y of all docks will be below the bottom row of the warehouse
             for (int i = 0; i < currentWarehouse.getNumDocks(); i++ )
             {
-                currentWarehouse.getDocks()[i] = new Dock(i + 1, i, currentWarehouse.getWarehouseRows(), DockState.Available);
+                //currentWarehouse.getDocks()[i] = new Dock(i + 1, i, currentWarehouse.getWarehouseRows() - 1, DockState.Available);
+                currentWarehouse.getDocks()[i] = new Dock(i + 1, i + 1, currentWarehouse.getWarehouseRows() - 1, DockState.Available);
             }
         }
 
@@ -245,14 +298,15 @@ namespace mongoTest.Components
 
         private void PollForNewOrders()
         {
-            //Console.WriteLine("polling for new orders");
+            
+            ////Console.WriteLine("polling for new orders");
 
             List<Order> orders = _orders.Find(Order => Order.orderState == OrderState.Placed).ToList();
             List<Item> itemsInWarehouse = new List<Item>();
 
-
             foreach (Order order in orders)
             {
+          
                 // find all the items in this order that are available in this
                 // warehouse and have not been scheduled for loading
                 itemsInWarehouse = GetItemsInWarehouse(order);
@@ -308,6 +362,43 @@ namespace mongoTest.Components
                 }
             }
             return itemsInWarehouse;
+        }
+
+        private List<ItemView> GetAllItemsInWarehouse()
+        {
+            FilterDefinition<Item> filter = new BsonDocument
+                {
+                    { "warehouseID", currentWarehouse.ID },
+                    { "itemState", ItemState.Available }
+                };
+
+            List<Item> items = _items.Find(filter).ToList();
+
+            Dictionary<string, int> itemViewDict = new Dictionary<string, int>();
+            List<ItemView> itemViews = new List<ItemView>();
+
+            foreach (Item item in items)
+            {
+                string name = item.name;
+                if (item.itemState == ItemState.Available)
+                {
+                    if (!itemViewDict.ContainsKey(name))
+                    {
+                        itemViewDict.Add(name, 1);
+                    }
+                    else
+                    {
+                        itemViewDict[name] += 1;
+                    }
+                }
+            }
+
+            foreach (var entry in itemViewDict)
+            {
+                itemViews.Add(new ItemView { name = entry.Key, amountAvailable = entry.Value });
+            }
+
+            return itemViews;
         }
 
         // queues robot tasks for a particular Order
@@ -382,9 +473,9 @@ namespace mongoTest.Components
         private ItemLocation GenerateRandomLocation(Item item)
         {
             Random rand = new Random();
-            int row = rand.Next(0, currentWarehouse.getWarehouseRows());
-            int column = rand.Next(0, currentWarehouse.getWarehouseColumns());
-            int shelf = rand.Next(0, currentWarehouse.getShelfHeight() + 1);
+            int row = rand.Next(1, currentWarehouse.getWarehouseRows() - 1);
+            int column = rand.Next(0, currentWarehouse.getWarehouseColumns() - 1);
+            int shelf = rand.Next(0, currentWarehouse.getShelfHeight());
             string orientation = new List<string>() { "right", "left" }[rand.Next(0,2)];
 
             ItemLocation location =  new ItemLocation(row, column, shelf, orientation);

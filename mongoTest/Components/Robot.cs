@@ -27,6 +27,9 @@ namespace mongoTest.Components
         private Mutex queueMutex;
         private Mutex truckMutex;
         IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
+        IMongoCollection<Order> _orders = ConnectionHelper.getOrderCollection();
+
+
 
 
 
@@ -51,12 +54,19 @@ namespace mongoTest.Components
                     if (successfulDequeue)
                     {
                         Console.WriteLine($"Robot {robotId} executing task : {currentTask.taskType} truck {currentTask.assignedTruck.Id}");
+                        WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                        {
+                            WarehouseGUI.Components.Reference_Computer.CurrentForm.updateRobotStatus(
+                                robotId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[positionX] + (positionY+1).ToString(),
+                                $"Executing task : {currentTask.taskType} truck {currentTask.assignedTruck.Id}");
+                        });
                         ExecuteRobotTask(currentTask);
                     }
                 } else {
                     ChargeBattery();
                 }
                 // Console.WriteLine("Robot running - " + robotId);
+                UpdateOrdersToShipped();
                 Thread.Sleep(1000);
             }
         }   
@@ -71,6 +81,12 @@ namespace mongoTest.Components
                     currentWeight += item.weight;
                     itemsInPossession.Add(item);
                     Console.WriteLine($"Robot {robotId} has picked up a {item.name}");
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                    {
+                        WarehouseGUI.Components.Reference_Computer.CurrentForm.updateRobotStatus(
+                            robotId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[positionX] + (positionY + 1).ToString(),
+                            $"Picked up a {item.name}");
+                    });
                 }
                 LoadItemsIntoTruck(task.getAssignedTruck());
 
@@ -80,6 +96,12 @@ namespace mongoTest.Components
                 {
                     Thread.Sleep(1000);
                     Console.WriteLine($"Robot {robotId} waiting for truck {currentTask.assignedTruck.Id} to dock");
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                    {
+                        WarehouseGUI.Components.Reference_Computer.CurrentForm.updateRobotStatus(
+                            robotId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[positionX] + (positionY + 1).ToString(),
+                            $"Waiting for truck {currentTask.assignedTruck.Id} to dock");
+                    });
                 }
                 PickUpFromTruck();
                 foreach (Item item in itemsInPossession)
@@ -87,7 +109,13 @@ namespace mongoTest.Components
                     RestockItem(item);
                     Console.WriteLine($"Robot {robotId} has just restocked a {item.name} and is at" +
                         $" X: {positionX} and Y: {positionY}");
-                    setItemStatus(item, ItemState.Available);
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                    {
+                        WarehouseGUI.Components.Reference_Computer.CurrentForm.updateRobotStatus(
+                            robotId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[positionX] + (positionY + 1).ToString(),
+                            $"Restocked a {item.name}");
+                    });
+                    SetItemStatus(item, ItemState.Available);
                 }
             }
             itemsInPossession.Clear();
@@ -106,10 +134,11 @@ namespace mongoTest.Components
                 {
                     // moveToLocation is not fully implemented
                     if (location.orientation == "left") {
+                        Console.WriteLine("breaks in 1");
                         MoveToLocation(location.row, location.column);
                     } else {
+                        Console.WriteLine("breaks in 2");
                         MoveToLocation(location.row, location.column + 1);
-
                     }
                     break;
                 }
@@ -120,14 +149,21 @@ namespace mongoTest.Components
 
         public void LoadItemsIntoTruck(Truck truck)
         {
+            Console.WriteLine("breaks in 3");
             MoveToLocation(truck.GetDock().positionX, truck.GetDock().positionY);
             List<Item> itemsInTruck = currentTask.assignedTruck.GetItemsInTruck();
             foreach(Item item in itemsInPossession) {
                 truckMutex.WaitOne();
                 itemsInTruck.Add(item);
                 truckMutex.ReleaseMutex();
-                setItemStatus(item, ItemState.Loaded);
+                SetItemStatus(item, ItemState.Loaded);
                 Console.WriteLine($"Robot {robotId} loaded a {item.name} into truck. ItemId: {item.Id}");
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                {
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.updateRobotStatus(
+                        robotId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[positionX] + (positionY + 1).ToString(),
+                        $"Loaded a {item.name} into truck. ItemId: {item.Id}");
+                });
             }
         }
 
@@ -138,8 +174,10 @@ namespace mongoTest.Components
                 {
                     // moveToLocation is not fully implemented
                     if (location.orientation == "left") {
+                        Console.WriteLine("breaks in 4");
                         MoveToLocation(location.row, location.column);
                     } else {
+                        Console.WriteLine("breaks in 5");
                         MoveToLocation(location.row, location.column + 1);
 
                     }
@@ -149,6 +187,7 @@ namespace mongoTest.Components
         }
 
         public void PickUpFromTruck() {
+            Console.WriteLine("breaks in 6");
             MoveToLocation(currentTask.assignedTruck.GetDock().positionX, currentTask.assignedTruck.GetDock().positionY);
             //while (currentWeight <= MAX_WEIGHT && currentTask.assignedTruck.GetItemsInTruck().Count > 0) {
             //    truckMutex.WaitOne();
@@ -170,13 +209,56 @@ namespace mongoTest.Components
                 currentWeight += item.weight;
                 itemsInPossession.Add(item);
                 Console.WriteLine($"Robot {robotId} picked up a {item.name} from truck. ItemId: {item.Id}");
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                {
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.updateRobotStatus(
+                        robotId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[positionX] + (positionY + 1).ToString(),
+                        $"Picked up a {item.name} from truck. ItemId: {item.Id}");
+                });
             }
         }
 
-        public void setItemStatus(Item item, ItemState state) {
+        public void SetItemStatus(Item item, ItemState state)
+        {
+            List<Order> orders = _orders.Find(order => true).ToList();
+            item.itemState = state;
+            foreach (Order order in orders)
+            {
+                foreach (Item NextItem in order.items)
+                {
+                    if (NextItem.Id == item.Id)
+                    {
+                        _orders.DeleteOne(OrderToDelete => OrderToDelete.Id == order.Id);
+                        order.items.Remove(NextItem);
+                        order.items.Add(item);
+                        _orders.InsertOne(order);
+                        break;
+                    }
+                }
+
+            }
             item.itemState = state;
             UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", state);
-            _items.UpdateOne(newItem => newItem.Id == item.Id , update);
+            _items.UpdateOne(newItem => newItem.Id == item.Id, update);
+        }
+
+        public void UpdateOrdersToShipped()
+        {
+            List<Order> orders = _orders.Find(order => order.orderState == OrderState.Loading).ToList();
+            UpdateDefinition<Order> update = Builders<Order>.Update.Set("orderState", OrderState.Shipped);
+
+            foreach (Order order in orders)
+            {
+                bool itemsLoaded = true;
+                foreach (Item item in order.items)
+                {
+                    if (item.itemState != ItemState.Loaded) itemsLoaded = false;
+                }
+                if (itemsLoaded)
+                {
+                    _orders.FindOneAndUpdate(orderToUpdate => orderToUpdate.Id == order.Id, update);
+                }
+            }
         }
 
 
@@ -188,12 +270,14 @@ namespace mongoTest.Components
         // }
 
         private void ChargeBattery() {
+            Console.WriteLine("breaks in 7");
             MoveToLocation(0, computer.GetWarehouse().getWarehouseRows());
             Thread.Sleep(ROBOT_CHARGING_TIME);
         }
 
 
-        private void MoveToLocation(int row, int column) {
+        private void MoveToLocation(int row, int column)
+        {
             if (column != GetRobotColumn())
             {
                 // if the next item is in the top half of warehouse, move to top,
@@ -201,11 +285,12 @@ namespace mongoTest.Components
                 if (row < this.computer.GetWarehouse().getWarehouseRows() / 2)
                 {
                     MoveRobotVertically(0);
-                } else
+                }
+                else
                 {
                     MoveRobotVertically(computer.GetWarehouse().getWarehouseRows() - 1);
                 }
-                    MoveRobotHorizontally(column);
+                MoveRobotHorizontally(column);
             }
 
             MoveRobotVertically(row);
@@ -220,22 +305,25 @@ namespace mongoTest.Components
                     positionX += 1;
                     WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
                     {
-                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotID, 1, 0);
+                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotId, positionX, positionY);
                     });
                     Thread.Sleep(500);
                 }
-            } else
+            }
+            else
             {
                 while (positionX > row)
                 {
                     positionX -= 1;
                     WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
                     {
-                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotID, -1, 0);
+                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotId, positionX, positionY);
                     });
                     Thread.Sleep(500);
                 }
             }
+
+            Console.WriteLine($"Robot {robotId} is at X: {positionX} Y: {positionY}");
         }
 
         private void MoveRobotVertically(int column)
@@ -247,7 +335,7 @@ namespace mongoTest.Components
                     positionY += 1;
                     WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
                     {
-                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotID, 0, 1);
+                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotId, positionX, positionY);
                     });
                     Thread.Sleep(500);
                 }
@@ -259,14 +347,16 @@ namespace mongoTest.Components
                     positionY -= 1;
                     WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
                     {
-                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotID, 0, -1);
+                        WarehouseGUI.Components.Reference_Computer.MoveRobotWithID(robotId, positionX, positionY);
                     });
                     Thread.Sleep(500);
                 }
             }
+            Console.WriteLine($"Robot {robotId} is at X: {positionX} Y: {positionY}");
+
         }
 
-         private bool batterySufficientForTrip() {
+        private bool batterySufficientForTrip() {
             return batteryLevel >= 2 * ENERGY_PER_TASK;
         }
 

@@ -56,13 +56,16 @@ namespace WarehouseGUI
             for(int i = 0; i < WarehouseVars.numColumns; i++)
             {
                 Components.RobotPosition.labelList.Add(
-                    createRobot(i+1)
+                    createRobot(i)
                 );
             }
         }
 
         public Label createRobot(int id/*, Grid_Point startingPt*/)
         {
+            RobotStatusTable.Rows.Add(new object[] { String.Format("Robot{0}", id), "A1", "Created" });
+            RobotStatusTable.Size = new Size(RobotStatusTable.Size.Width, (id + 1) * 30);
+
             int pointSideLength = Convert.ToInt32(this.Size.Height * 0.7 / WarehouseVars.numColumns);
             Label label = new Label();
             label.Name = String.Format("Robot{0}", id);
@@ -82,6 +85,8 @@ namespace WarehouseGUI
 
         void createShelves()
         {
+            
+
             int xLength = Convert.ToInt32(this.Size.Height * 0.7 / WarehouseVars.numColumns) / 2;
             int yLength = Convert.ToInt32(this.Size.Height * 0.7 / WarehouseVars.numColumns) * (WarehouseVars.numRows - 2);
             for (int i = 0; i < WarehouseVars.numColumns - 1; i++)
@@ -117,6 +122,61 @@ namespace WarehouseGUI
                 this.Controls.Add(pictureBox);
                 pictureBox.BringToFront();
             }
+        }
+        List<int> pastOrderIDs = new List<int>();
+        public void updateOrderStatus(List<Order> orderList)
+        {
+            OrderTable.Rows.Clear();
+            OrderTable.Size = new Size(OrderTable.Size.Width, (orderList.Count+1) * 25);
+            foreach(Order order in orderList)
+            {
+                string message = "";
+                foreach(string key in order.ItemDict.Keys)
+                {
+                    message += string.Format("{0}({1}), \n", key, order.ItemDict[key]);
+                }
+                if (!pastOrderIDs.Contains(order.orderID))
+                {
+                    OrderTable.Rows.Add(new object[] { message, order.Status });
+                    pastOrderIDs.Add(order.orderID);
+                }
+                
+            }
+        }
+
+        public void updateInventory(List<Item> itemList, int lowStockLimit)
+        {
+            Inventory.Rows.Clear();
+            Inventory.Size = new Size(Inventory.Size.Width, itemList.Count * 25);
+            foreach (Item item in itemList)
+            {
+                string message = "";
+                if (item.quantity < lowStockLimit)
+                {
+                    message = "LOW STOCK";
+                }
+                Inventory.Rows.Add(new object[] { item.name, item.quantity, message});
+            }
+        }
+
+        public void updateRobotStatus(int robotId, string location, string action)
+        {
+            RobotStatusTable.Rows[robotId].SetValues(new object[] { 
+                String.Format("Robot{0}", robotId), 
+                location, 
+                action 
+            });
+        }
+
+        public void createTruck(string id, int i)
+        {
+            TruckStatusTable.Rows.Add(new object[] { id, "Created" });
+            TruckStatusTable.Size = new Size(TruckStatusTable.Size.Width, (i + 1) * 30);
+        }
+
+        public void updateTruckStatus(string truckId, string location, string action, int id)
+        {
+            TruckStatusTable.Rows[id].SetValues(new object[] {truckId, action});
         }
     }
 }

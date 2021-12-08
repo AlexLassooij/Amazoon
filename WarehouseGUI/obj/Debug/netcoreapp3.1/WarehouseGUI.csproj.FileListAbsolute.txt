@@ -20,7 +20,6 @@ D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\bin\Debug\netcoreapp3.
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\bin\Debug\netcoreapp3.1\WarehouseGUI.runtimeconfig.dev.json
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\bin\Debug\netcoreapp3.1\WarehouseGUI.dll
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\bin\Debug\netcoreapp3.1\WarehouseGUI.pdb
-D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.csprojAssemblyReference.cache
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.Form1.resources
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.csproj.GenerateResource.cache
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.AssemblyInfoInputs.cache
@@ -31,3 +30,4 @@ D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.genruntimeconfig.cache
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.Properties.Resources.resources
 D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.WarehouseForm.resources
+D:\UBC\3rd-year\CPEN-333\Project\TermProject\WarehouseGUI\obj\Debug\netcoreapp3.1\WarehouseGUI.csprojAssemblyReference.cache

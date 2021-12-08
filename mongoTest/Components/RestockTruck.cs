@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Collections.Generic;
 using mongoTest.Models;
+using System.Windows.Forms;
 
 namespace mongoTest.Components
 {
@@ -37,6 +38,12 @@ namespace mongoTest.Components
             while ((this.Dock = FindAvailableDock()) == null)
             {
                 Console.WriteLine($"Truck {Id} waiting for available dock");
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                {
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                        base.Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[base.PositionX] + (PositionY + 1).ToString(),
+                        $"Waiting for available dock", base.numericID);
+                });
                 Thread.Sleep(500);
             }
                     
@@ -48,6 +55,12 @@ namespace mongoTest.Components
             {
                 Console.WriteLine($"Truck {Id} is being unloaded\n " +
                 $"{LoadedItems.Count} more items are still in truck");
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                {
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                        base.Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[base.PositionX] + (PositionY + 1).ToString(),
+                        $"Being unloaded", base.numericID);
+                });
                 Thread.Sleep(1000);
             }
             LeaveDock();
@@ -67,6 +80,12 @@ namespace mongoTest.Components
             TruckState = TruckState.Departed;
             Dock.setDockState(DockState.Available);
             Console.WriteLine($"Restock truck {Id} has left the warehouse");
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                    base.Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[base.PositionX] + (PositionY + 1).ToString(),
+                    $"Restock truck has left the warehouse", base.numericID);
+            });
             TruckSemaphore.Release();
         }
 
@@ -76,12 +95,24 @@ namespace mongoTest.Components
             // let the computer know that truck has arrived           
             TruckState = TruckState.Arrived;
             Console.WriteLine($"Restock truck {Id} has arrived and is currently at X: {PositionX} Y: {PositionY}");
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                    base.Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[base.PositionX] + (PositionY + 1).ToString(),
+                    $"Restock truck has arrived and is currently at X: {PositionX} Y: {PositionY}", base.numericID);
+            });
         }
         
 
         public void ReadyForUnloading()
         {
             Console.WriteLine($"Restock truck is carrying {GetCurrentWeight()}kg worth of products, and is ready for unloading.");
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                    base.Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[base.PositionX] + (PositionY + 1).ToString(),
+                    $"Restock truck is carrying {GetCurrentWeight()}kg worth of products, and is ready for unloading.", base.numericID);
+            });
             TruckState = TruckState.Unloading;
         }
 

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using mongoTest.Models;
 using System.Windows.Forms;
+using mongoTest.Components;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -55,6 +56,7 @@ namespace mongoTest.Controllers
         [HttpPost]
         public IActionResult PlaceOrder(string customerName, string orderDetails)
         {
+            CentralComputer.orderPlaced = true;
             IMongoCollection<Order> _orders = ConnectionHelper.getOrderCollection();
             List<string> parsedOrders = orderDetails.Split(',').ToList();
             List<Item> orderItems = new List<Item>();

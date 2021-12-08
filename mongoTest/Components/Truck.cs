@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using mongoTest.Models;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace mongoTest.Components
 {
@@ -9,6 +10,9 @@ namespace mongoTest.Components
     {
         static public int MAX_WEIGHT = 5000;
         static public int MAX_VOLUME = 5000;
+        static public int globalID = 0;
+
+        public int numericID;
         public int currentWeight = 0;
         public int currentVolume = 0;
         public string Id = Guid.NewGuid().ToString();
@@ -28,6 +32,13 @@ namespace mongoTest.Components
             this.PositionX = PositionX;
             this.PositionY = PositionY;
             this.TruckSemaphore = TruckSemaphore;
+            numericID = globalID;
+            globalID++;
+
+            WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+            {
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.createTruck(Id, numericID);
+            });
         }
 
         // overload constructor for arriving truck
@@ -79,6 +90,12 @@ namespace mongoTest.Components
                 availableDock.setDockState(DockState.Occupied);
                 NotifyDocking();
                 Console.WriteLine($"Truck {Id} has been docked at dock {availableDock.DockID}");
+                WarehouseGUI.Components.Reference_Computer.CurrentForm.Invoke((MethodInvoker)delegate
+                {
+                    WarehouseGUI.Components.Reference_Computer.CurrentForm.updateTruckStatus(
+                        Id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()[PositionX] + (PositionY + 1).ToString(),
+                        $"Docked at dock {availableDock.DockID}", numericID);
+                });
             }
             
             // returns the dockID of the docking station that the truck has docked
