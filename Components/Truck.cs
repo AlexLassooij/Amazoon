@@ -19,13 +19,15 @@ namespace mongoTest.Components
         public int PositionX {get; set;}
         public int PositionY {get; set;}
         public Dock Dock {get; set;}
+        public Semaphore TruckSemaphore;
 
         // Default constructor for adding truck to warehouse
-        public Truck(Warehouse AssignedWarehouse, int InitPositionX, int InitPositionY)
+        public Truck(Warehouse AssignedWarehouse, int PositionX, int PositionY, Semaphore TruckSemaphore)
         {
             this.AssignedWarehouse = AssignedWarehouse;
-            this.PositionX = InitPositionX;
-            this.PositionY = InitPositionY;
+            this.PositionX = PositionX;
+            this.PositionY = PositionY;
+            this.TruckSemaphore = TruckSemaphore;
         }
 
         // overload constructor for arriving truck
@@ -41,12 +43,10 @@ namespace mongoTest.Components
         // if not, it will wait in a loop until one becomes available
         // once available, the truck will move towards the dock and dock itself there 
         public abstract void RunTruck();
-
-
         
-
         public Dock FindAvailableDock()
         {
+            TruckSemaphore.WaitOne();
             foreach(Dock dock in AssignedWarehouse.getDocks())
             {
                 if (dock.isAvailable())
@@ -57,7 +57,7 @@ namespace mongoTest.Components
                 }
                 else 
                 {
-                    Console.WriteLine($"Dock {dock.DockID} occupied.");
+                    // Console.WriteLine($"Dock {dock.DockID} occupied.");
                 }
             }
             return null;

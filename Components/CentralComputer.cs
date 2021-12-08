@@ -22,7 +22,8 @@ namespace mongoTest.Components
         private Mutex robotQueueMutex = new Mutex();
         private Mutex robotTruckeMutex = new Mutex();
         public Mutex dockMutex = new Mutex();
-        private Semaphore truckSemaphore;
+        private Semaphore RestockTruckSemaphore;
+        private Semaphore ShippingTruckSemaphore;
         private Task[] robotTasks;
         private IMongoCollection<Item> _items = ConnectionHelper.getItemCollection();
         private IMongoCollection<Order> _orders = ConnectionHelper.getOrderCollection();
@@ -39,7 +40,8 @@ namespace mongoTest.Components
         public CentralComputer(Warehouse currentWarehouse)
         {
             this.currentWarehouse = currentWarehouse;
-            truckSemaphore = new Semaphore(0, currentWarehouse.getNumDocks());
+            RestockTruckSemaphore = new Semaphore(currentWarehouse.getNumDocks() / 2 + currentWarehouse.getNumDocks() % 2, currentWarehouse.getNumDocks() / 2 + currentWarehouse.getNumDocks() % 2);
+            ShippingTruckSemaphore = new Semaphore(currentWarehouse.getNumDocks() / 2 + currentWarehouse.getNumDocks() % 2, currentWarehouse.getNumDocks() / 2 + currentWarehouse.getNumDocks() % 2);
             robotTasks = new Task[currentWarehouse.numColumns];
             currentWarehouse.SetComputer(this);
             RunWarehouse();
@@ -61,53 +63,7 @@ namespace mongoTest.Components
         // ===> N/A
         // Docking Station status will be updated via central computer
         // because the trucks will be interacting with the central computer
-
-        int numberOfDockingStations = 2; // just for testing. this number should be imported from when warehouse gets constructed
-        private Dock[] dockList = new Dock[2]; // for now two docks
-
-        private void getDockingStationStatus(int DockID)
-        {
-            // this functino returns the status of every docking station
-            foreach (Dock dock in dockList)
-            {
-                if (dock.DockID == DockID)
-                {
-                    Console.WriteLine("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-                    Console.WriteLine($"Dock ID: {dock.DockID}             $$$");
-                    Console.WriteLine($"Dock Position: {dock.positionX}    $$$");
-                    Console.WriteLine($"Dock Status: {dock.dockState}     $$$");
-                    Console.WriteLine("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-                    Console.WriteLine("");
-                }
-            }
-        }
-        private void updateDockingStationStatus(int DockID, DockState dockState)
-        {
-            foreach (Dock dock in dockList)
-            {
-                if (dock.DockID == DockID)
-                {
-                    dock.setDockState(dockState);
-                    Console.WriteLine($"Updated Dock Status for {dock.DockID}: ");
-                    getDockingStationStatus(dock.DockID);
-                }
-                else
-                    Console.WriteLine($"Failed to find Dock {dock.DockID}");
-            }
-        }
-        // call TRUNCATE TABLE tableName for each table
-        //public void initializeComputer()
-        //{
-        //    this.currentWarehouse = new Warehouse(
-        //        this, 4, 4, 2);                                
-        //    for (int i = 0; i < this.numRobots; i++)
-        //    {
-
-        //        robots[i] = new Robot();
-        //        var robot = robots[i];                
-        //    }
-        //}       
-
+        
         // central function of the computer, will always run
         public void RunWarehouse()
         {
@@ -126,9 +82,8 @@ namespace mongoTest.Components
 
             while (true)
            {
-                pollForNewOrders();
+                PollForNewOrders();
                 CheckLowStockItems();
-
                 // Console.WriteLine("Central computer running");
                 Thread.Sleep(1000);
            }
@@ -136,7 +91,7 @@ namespace mongoTest.Components
 
         private void CheckLowStockItems()
         {
-            Dictionary<string, int> itemAmountDictioanry = new Dictionary<string, int>();
+            Dictionary<string, int> itemAmountDictionary = new Dictionary<string, int>();
 
             // checks how many of each item are in stock
             foreach (Item item in inventory)
@@ -144,25 +99,31 @@ namespace mongoTest.Components
                 string name = item.name;
                 if (item.itemState == ItemState.Available || item.itemState == ItemState.Incoming)
                 {
-                    if (!itemAmountDictioanry.ContainsKey(name))
+                    if (!itemAmountDictionary.ContainsKey(name))
                     {
-                        itemAmountDictioanry.Add(name, 1);
+                        itemAmountDictionary.Add(name, 1);
                     }
                     else
                     {
-                        itemAmountDictioanry[name] += 1;
+                        itemAmountDictionary[name] += 1;
                     }
                 }
             }
 
             // checks if any items in the warehouse are low in stock
-            foreach (var dictEntry in itemAmountDictioanry)
+            foreach (var dictEntry in itemAmountDictionary)
             {
                 if (dictEntry.Value < MIN_AMOUNT_NEEDED)
                 {
                     // adds items to a restock list
+                    Console.WriteLine($"{dictEntry.Key} is low in stock");
                     AddItemsToRestock(dictEntry.Key);
                 }
+            }
+
+            if (restockItems.Count > 0)
+            {
+                DispatchRestockingTruck();
             }
         }
 
@@ -197,17 +158,23 @@ namespace mongoTest.Components
                     // if truck is full, dispatches a restocking truck,
                     // then keeps adding the rest (if any left) of the items to
                     // the list for another truck to bring
-                    Console.WriteLine($"Dispatching a restocking truck with total weight : {getTotalItemWeight(restockItems)} and volume : {getTotalItemVolume(restockItems)} and the following items: " + restockItems.ToString());
-                    CreateRestockingTruck(restockItems);
-                    UpdateInventory(restockItems);
-                    restockItems.Clear();
+                    DispatchRestockingTruck();
+                    restockItems.Add(newItem);
                 }
-            }
+            }            
+        }
+
+        public void DispatchRestockingTruck()
+        {          
+            Console.WriteLine($"Dispatching a restocking truck with total weight : {getTotalItemWeight(restockItems)} and volume : {getTotalItemVolume(restockItems)} and the following items: " + restockItems.ToString());
+            CreateRestockingTruck(restockItems);
+            UpdateInventory(restockItems);
+            restockItems.Clear();
         }
 
         public void CreateShippingTruck()
         {
-            ShippingTruck ShippingTruck = new ShippingTruck(currentWarehouse, 0, 8);
+            ShippingTruck ShippingTruck = new ShippingTruck(currentWarehouse, 0, 8, ShippingTruckSemaphore);
             currentWarehouse.AddShippingTruck(ShippingTruck);
             Task.Run(() => ShippingTruck.RunTruck());
         }
@@ -217,13 +184,13 @@ namespace mongoTest.Components
             int defaultX = 0;
             int defaultY = 8;
 
-            RestockTruck restockTruck = new RestockTruck(currentWarehouse, defaultX, defaultY, restockItems);
+            RestockTruck restockTruck = new RestockTruck(currentWarehouse, defaultX, defaultY, restockItems, RestockTruckSemaphore);
             currentWarehouse.AddRestockTruck(restockTruck);
 
-            
+
             Task.Run(() => restockTruck.RunTruck());
-            
-        }        
+
+        }
 
         private void InitRobots() {
             for (int i = 0; i < currentWarehouse.getWarehouseColumns(); i++) {
@@ -251,11 +218,11 @@ namespace mongoTest.Components
         }
 
 
-        private void pollForNewOrders()
+        private void PollForNewOrders()
         {
-            Console.WriteLine("polling for new orders");
+            //Console.WriteLine("polling for new orders");
 
-            List<Order> orders = _orders.Find(Order => true).ToList();
+            List<Order> orders = _orders.Find(Order => Order.orderState == OrderState.Placed).ToList();
             List<Item> itemsInWarehouse = new List<Item>();
 
 
@@ -264,6 +231,7 @@ namespace mongoTest.Components
                 // find all the items in this order that are available in this
                 // warehouse and have not been scheduled for loading
                 itemsInWarehouse = GetItemsInWarehouse(order);
+                SetItemsToPurchased(itemsInWarehouse);
                 // only schedules task if the order contains any items that have not been
                 // been schedules for loading yet
                 if (itemsInWarehouse.Count > 0)
@@ -275,7 +243,7 @@ namespace mongoTest.Components
                     {
                         ShippingTruck.addWeight(getTotalItemWeight(itemsInWarehouse));
                         ShippingTruck.addVolume(getTotalItemVolume(itemsInWarehouse));
-                        CreateLoadTask(itemsInWarehouse, ShippingTruck);
+                        CreateLoadTask(itemsInWarehouse, ShippingTruck, order.Id);
                     }
                 }
             }
@@ -284,22 +252,21 @@ namespace mongoTest.Components
         // updates the database to reflect that items are going to be picked up
         // for Shipping
         // adds a task to the queue to have robots load the items
-        private void CreateLoadTask(List<Item> itemsInWarehouse, Truck ShippingTruck)
+        private void CreateLoadTask(List<Item> itemsInWarehouse, Truck ShippingTruck, string OrderId)
         {
             // list of items in this order that are present in current warehouse
             
 
-            UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", ItemState.Loading);
+            UpdateDefinition<Item> updateItem = Builders<Item>.Update.Set("itemState", ItemState.Loading);
+            UpdateDefinition<Order> updateOrder = Builders<Order>.Update.Set("orderState", OrderState.Loading);
 
             foreach (Item item in itemsInWarehouse)
-            {
-                FilterDefinition<Item> filter = new BsonDocument
-                {
-                    { "Id", item.Id },
-                };
-                _items.FindOneAndUpdate(filter, update);
+            {                
+                _items.UpdateOne(newItem => newItem.Id == item.Id, updateItem);
                 item.itemState = ItemState.Loading;                
-            }
+            }           
+
+            _orders.UpdateOne(order => order.Id == OrderId, updateOrder);
 
             QueueRobotTasks("load", itemsInWarehouse, ShippingTruck);            
         }
@@ -315,7 +282,6 @@ namespace mongoTest.Components
                     itemsInWarehouse.Add(item);
                 }
             }
-
             return itemsInWarehouse;
         }
 
@@ -381,8 +347,11 @@ namespace mongoTest.Components
         }
 
         private void AddItemsToDatabase(List<Item> items)
-        {            
-                _items.InsertMany(items);            
+        {
+            foreach (Item item in items)
+            {
+                _items.InsertOne(item);
+            }
         }
 
         private ItemLocation GenerateRandomLocation(Item item)
@@ -460,6 +429,8 @@ namespace mongoTest.Components
                         return truck;
                     } else {
                         truck.LeaveDock();
+                        CreateShippingTruck();
+                        break;
                     }
                 }
             }
@@ -487,6 +458,22 @@ namespace mongoTest.Components
         {
             return currentWarehouse;
         }
+
+        private void SetItemsToPurchased(List<Item> items)
+        {
+            List<string> itemIds = new List<string>(); 
+            foreach (Item item in items)
+            {
+                itemIds.Add(item.Id);
+            }
+            foreach (Item item in inventory)
+            {
+                if (itemIds.Contains(item.Id))
+                {
+                    item.itemState = ItemState.Purchased;
+                }
+            }
+        } 
 
         // have a polling method, checks for new orders every few seconds
         // if new order exists : add new pick up tasks for robots

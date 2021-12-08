@@ -49,7 +49,7 @@ namespace mongoTest.Components
                     queueMutex.ReleaseMutex();
                     if (successfulDequeue)
                     {
-                        Console.WriteLine("Robot executing task");
+                        Console.WriteLine($"Robot {robotId} executing task : {currentTask.taskType} truck {currentTask.assignedTruck.Id}");
                         ExecuteRobotTask(currentTask);
                     }
                 } else {
@@ -172,14 +172,9 @@ namespace mongoTest.Components
         }
 
         public void setItemStatus(Item item, ItemState state) {
-            item.itemState = state;
-            FilterDefinition<Item> filter = new BsonDocument
-                {
-                    { "Id", item.Id },                    
-                };
-
+            item.itemState = state;            
             UpdateDefinition<Item> update = Builders<Item>.Update.Set("itemState", state);
-            _items.FindOneAndUpdate(filter, update);
+            _items.UpdateOne(newItem => newItem.Id == item.Id , update);
         }
     
      

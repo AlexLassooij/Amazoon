@@ -6,8 +6,8 @@ namespace mongoTest.Components
 {
     public class ShippingTruck : Truck
     {
-        public ShippingTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY) :
-            base(assignedWarehouse, initPositionX, initPositionY)
+        public ShippingTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY, Semaphore TruckSemaphore) :
+            base(assignedWarehouse, initPositionX, initPositionY, TruckSemaphore)
         { }
 
         override
@@ -47,7 +47,8 @@ namespace mongoTest.Components
             AssignedWarehouse.GetShippingTrucks().Remove(this);
             TruckState = TruckState.Departed;
             Dock.setDockState(DockState.Available);
-            System.Console.WriteLine($"Shipping truck {Id} has left the warehouse");
+            TruckSemaphore.Release();
+            Console.WriteLine($"Shipping truck {Id} has left the warehouse");
         }
 
         override

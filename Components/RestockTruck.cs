@@ -7,8 +7,8 @@ namespace mongoTest.Components
 {
     public class RestockTruck : Truck
     {
-        public RestockTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY, List<Item> restockItems) :
-            base(assignedWarehouse, initPositionX, initPositionY)
+        public RestockTruck(Warehouse assignedWarehouse, int initPositionX, int initPositionY, List<Item> restockItems, Semaphore TruckSemaphore) :
+            base(assignedWarehouse, initPositionX, initPositionY, TruckSemaphore)
         {
             LoadedItems = new List<Item>(restockItems);
         }
@@ -66,7 +66,8 @@ namespace mongoTest.Components
             AssignedWarehouse.GetRestockTrucks().Remove(this);
             TruckState = TruckState.Departed;
             Dock.setDockState(DockState.Available);
-            System.Console.WriteLine($"Restock truck {Id} has left the warehouse");
+            Console.WriteLine($"Restock truck {Id} has left the warehouse");
+            TruckSemaphore.Release();
         }
 
         override
