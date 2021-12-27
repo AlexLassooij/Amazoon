@@ -11,7 +11,7 @@ An Amazon clone. This clone automatically simulates a warehouse in real-time. Fo
   * Robots gather items around warehouse
   * Drop off items into truck
   * Truck (_if carrying sufficient weight_) leaves warehouse
-* __Restocking__🚛
+* __Restocking__ 🚛
   * Truck with new items arrives
   * Robots unload truck, place new items into warehouse
 * __Database updated to reflect live status of orders and items__
