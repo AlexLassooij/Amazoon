@@ -19,4 +19,6 @@ An Amazon clone. This clone automatically simulates a warehouse in real-time. Fo
 
 ## Demo 
 
-<iframe src="https://drive.google.com/file/d/1qtEt5il-Hq3AcaEy18Q0n5I7TauLVjf1/view?usp=sharing" frameborder="0" allowfullscreen="true"> </iframe>
+
+https://user-images.githubusercontent.com/71570400/147901336-a1b36cf9-9526-4697-a71f-630c49163f35.mp4
+
