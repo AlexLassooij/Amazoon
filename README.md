@@ -16,3 +16,9 @@ An Amazon clone. This clone automatically simulates a warehouse in real-time. Fo
   * Robots unload truck, place new items into warehouse
 * __Database updated to reflect live status of orders and items__
   * e.g. Available, Purchases, Loaded, Shipped for items
+
+## Demo 
+
+<figure class="video_container">
+  <iframe src="https://drive.google.com/file/d/1qtEt5il-Hq3AcaEy18Q0n5I7TauLVjf1/view?usp=sharing" frameborder="0" allowfullscreen="true"> </iframe>
+</figure>
